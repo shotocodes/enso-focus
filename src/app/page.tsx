@@ -1,0 +1,215 @@
+"use client";
+
+import { useState, useEffect, useCallback, useRef } from "react";
+import { SoundSettings, TabId, ThemeMode, TimerConfig, TimerMode, DEFAULT_TIMER_CONFIG } from "@/types";
+import { Locale, setLocale, t } from "@/lib/i18n";
+import {
+  getTimerConfig,
+  saveTimerConfig,
+  getSoundSettings,
+  saveSoundSettings,
+  getActiveTab,
+  saveActiveTab,
+  getTheme,
+  saveTheme,
+  getStoredLocale,
+  saveLocale as saveLocaleStorage,
+  addSession,
+} from "@/lib/storage";
+import { playAlert, playCelebration } from "@/lib/sound";
+import BottomTabBar from "@/components/BottomTabBar";
+import FocusTab from "@/components/tabs/FocusTab";
+import HistoryTab from "@/components/tabs/HistoryTab";
+import SettingsTab from "@/components/tabs/SettingsTab";
+import MenuTab from "@/components/tabs/MenuTab";
+import FullscreenFocus from "@/components/FullscreenFocus";
+import { useTimer } from "@/hooks/useTimer";
+
+function applyTheme(theme: ThemeMode) {
+  if (typeof document === "undefined") return;
+  const resolved =
+    theme === "system"
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light"
+      : theme;
+  document.documentElement.setAttribute("data-theme", resolved);
+}
+
+export default function Home() {
+  const [mounted, setMounted] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabId>("focus");
+  const [timerConfig, setTimerConfig] = useState<TimerConfig>(DEFAULT_TIMER_CONFIG);
+  const [soundSettings, setSoundSettings] = useState<SoundSettings>({
+    enabled: false, tickSound: "classic", volume: 0.5,
+  });
+  const [theme, setThemeState] = useState<ThemeMode>("dark");
+  const [locale, setLocaleState] = useState<Locale>("ja");
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [sessionVersion, setSessionVersion] = useState(0);
+  const sessionStartRef = useRef<string | null>(null);
+
+  const handleTimerComplete = useCallback((mode: TimerMode) => {
+    if (mode === "focus" && sessionStartRef.current) {
+      const now = new Date().toISOString();
+      const startTime = new Date(sessionStartRef.current).getTime();
+      const duration = Math.round((Date.now() - startTime) / 1000);
+      addSession({ startedAt: sessionStartRef.current, endedAt: now, duration });
+      sessionStartRef.current = null;
+      setSessionVersion((v) => v + 1);
+      playCelebration();
+    } else if (mode === "break") {
+      playAlert();
+    }
+  }, []);
+
+  const timer = useTimer({ config: timerConfig, onComplete: handleTimerComplete });
+
+  // Track session start
+  useEffect(() => {
+    if (timer.state === "running" && timer.mode === "focus" && !sessionStartRef.current) {
+      sessionStartRef.current = new Date().toISOString();
+    }
+    if (timer.state === "idle" && timer.mode === "focus") {
+      sessionStartRef.current = null;
+    }
+  }, [timer.state, timer.mode]);
+
+  useEffect(() => {
+    setTimerConfig(getTimerConfig());
+    setSoundSettings(getSoundSettings());
+    setActiveTab(getActiveTab());
+
+    const storedTheme = getTheme();
+    setThemeState(storedTheme);
+    applyTheme(storedTheme);
+
+    const storedLocale = getStoredLocale();
+    setLocaleState(storedLocale);
+    setLocale(storedLocale);
+
+    setMounted(true);
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (theme !== "system") return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = () => applyTheme("system");
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, [theme]);
+
+  const handleTabChange = useCallback((tab: TabId) => {
+    setActiveTab(tab);
+    saveActiveTab(tab);
+  }, []);
+
+  const handleTimerConfigChange = useCallback((config: TimerConfig) => {
+    setTimerConfig(config);
+    saveTimerConfig(config);
+  }, []);
+
+  const handleSoundSettingsChange = useCallback((settings: SoundSettings) => {
+    setSoundSettings(settings);
+    saveSoundSettings(settings);
+  }, []);
+
+  const handleThemeChange = useCallback((newTheme: ThemeMode) => {
+    setThemeState(newTheme);
+    saveTheme(newTheme);
+    applyTheme(newTheme);
+  }, []);
+
+  const handleLocaleChange = useCallback((newLocale: Locale) => {
+    setLocale(newLocale);
+    saveLocaleStorage(newLocale);
+    setLocaleState(newLocale);
+  }, []);
+
+  const handleEnterFullscreen = useCallback(() => {
+    setIsFullscreen(true);
+    document.documentElement.requestFullscreen?.().catch(() => {});
+  }, []);
+
+  const handleExitFullscreen = useCallback(() => {
+    setIsFullscreen(false);
+    document.exitFullscreen?.().catch(() => {});
+  }, []);
+
+  // Sync fullscreen state with browser
+  useEffect(() => {
+    const handler = () => {
+      if (!document.fullscreenElement) {
+        setIsFullscreen(false);
+      }
+    };
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-muted text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  if (isFullscreen) {
+    return (
+      <FullscreenFocus
+        secondsLeft={timer.secondsLeft}
+        totalSeconds={timer.totalSeconds}
+        mode={timer.mode}
+        state={timer.state}
+        onPause={timer.pause}
+        onResume={timer.resume}
+        onReset={timer.reset}
+        onSkip={timer.skip}
+        onExit={handleExitFullscreen}
+      />
+    );
+  }
+
+  return (
+    <>
+      <main className="min-h-screen max-w-lg mx-auto px-4 pt-6 pb-24">
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl font-bold tracking-tight">{t("app.name", locale)}</h1>
+          <p className="text-xs text-muted mt-0.5">{t("app.tagline", locale)}</p>
+        </div>
+
+        {activeTab === "focus" && (
+          <FocusTab
+            key={locale}
+            timer={timer}
+            onEnterFullscreen={handleEnterFullscreen}
+          />
+        )}
+        {activeTab === "history" && (
+          <HistoryTab key={`${locale}-${sessionVersion}`} />
+        )}
+        {activeTab === "settings" && (
+          <SettingsTab
+            key={locale}
+            timerConfig={timerConfig}
+            onTimerConfigChange={handleTimerConfigChange}
+            soundSettings={soundSettings}
+            onSoundSettingsChange={handleSoundSettingsChange}
+            theme={theme}
+            onThemeChange={handleThemeChange}
+            locale={locale}
+            onLocaleChange={handleLocaleChange}
+          />
+        )}
+        {activeTab === "menu" && <MenuTab key={locale} />}
+      </main>
+
+      <BottomTabBar key={locale} activeTab={activeTab} onTabChange={handleTabChange} />
+    </>
+  );
+}

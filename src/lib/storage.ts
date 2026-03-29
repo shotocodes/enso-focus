@@ -1,0 +1,141 @@
+import { FocusSession, SoundSettings, TabId, ThemeMode, TimerConfig, DEFAULT_TIMER_CONFIG } from "@/types";
+import { Locale } from "./i18n";
+
+const PREFIX = "enso-focus-";
+
+function get<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = localStorage.getItem(PREFIX + key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function set(key: string, value: unknown): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(PREFIX + key, JSON.stringify(value));
+}
+
+// Timer config
+export function getTimerConfig(): TimerConfig {
+  return get("timer-config", DEFAULT_TIMER_CONFIG);
+}
+export function saveTimerConfig(config: TimerConfig): void {
+  set("timer-config", config);
+}
+
+// Sessions
+export function getSessions(): FocusSession[] {
+  return get<FocusSession[]>("sessions", []);
+}
+
+export function addSession(session: Omit<FocusSession, "id">): FocusSession {
+  const sessions = getSessions();
+  const newSession: FocusSession = { ...session, id: crypto.randomUUID() };
+  sessions.push(newSession);
+  set("sessions", sessions);
+  return newSession;
+}
+
+export function clearSessions(): void {
+  set("sessions", []);
+}
+
+// Stats helpers
+function startOfDay(date: Date): Date {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function startOfWeek(date: Date): Date {
+  const d = startOfDay(date);
+  const day = d.getDay();
+  const diff = day === 0 ? 6 : day - 1; // Monday start
+  d.setDate(d.getDate() - diff);
+  return d;
+}
+
+function startOfMonth(date: Date): Date {
+  const d = startOfDay(date);
+  d.setDate(1);
+  return d;
+}
+
+export function getStats() {
+  const sessions = getSessions();
+  const now = new Date();
+  const todayStart = startOfDay(now).getTime();
+  const weekStart = startOfWeek(now).getTime();
+  const monthStart = startOfMonth(now).getTime();
+
+  let today = 0, week = 0, month = 0, total = 0, totalSessions = 0;
+
+  for (const s of sessions) {
+    const t = new Date(s.endedAt).getTime();
+    total += s.duration;
+    totalSessions++;
+    if (t >= monthStart) month += s.duration;
+    if (t >= weekStart) week += s.duration;
+    if (t >= todayStart) today += s.duration;
+  }
+
+  return { today, week, month, total, totalSessions };
+}
+
+export function getDailyStats(days: number = 7): { date: string; duration: number }[] {
+  const sessions = getSessions();
+  const result: { date: string; duration: number }[] = [];
+  const now = new Date();
+
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const dayStart = startOfDay(d).getTime();
+    const dayEnd = dayStart + 86400000;
+    const dateStr = d.toISOString().slice(0, 10);
+
+    let duration = 0;
+    for (const s of sessions) {
+      const t = new Date(s.endedAt).getTime();
+      if (t >= dayStart && t < dayEnd) duration += s.duration;
+    }
+    result.push({ date: dateStr, duration });
+  }
+
+  return result;
+}
+
+// Sound settings
+export function getSoundSettings(): SoundSettings {
+  return get("sound", { enabled: false, tickSound: "classic" as const, volume: 0.5 });
+}
+export function saveSoundSettings(s: SoundSettings): void {
+  set("sound", s);
+}
+
+// Tab
+export function getActiveTab(): TabId {
+  return get("active-tab", "focus" as TabId);
+}
+export function saveActiveTab(tab: TabId): void {
+  set("active-tab", tab);
+}
+
+// Theme
+export function getTheme(): ThemeMode {
+  return get("theme", "dark" as ThemeMode);
+}
+export function saveTheme(theme: ThemeMode): void {
+  set("theme", theme);
+}
+
+// Locale
+export function getStoredLocale(): Locale {
+  return get("locale", "ja" as Locale);
+}
+export function saveLocale(locale: Locale): void {
+  set("locale", locale);
+}
