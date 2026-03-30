@@ -1,9 +1,10 @@
-const CACHE_NAME = "enso-v1";
+const CACHE_NAME = "enso-v2";
 const PRECACHE = ["/", "/icon-192.png", "/icon-512.png"];
+const SOUND_FILES = ["/sounds/thunder.mp3", "/sounds/fire.mp3", "/sounds/whitenoise.mp3", "/sounds/birds.mp3", "/sounds/waves.mp3"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll([...PRECACHE, ...SOUND_FILES]).catch(() => cache.addAll(PRECACHE)))
   );
   self.skipWaiting();
 });
