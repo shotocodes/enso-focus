@@ -78,6 +78,11 @@ const translations: Record<string, Record<Locale, string>> = {
   "menu.credits": { ja: "クレジット", en: "Credits", zh: "制作信息", ko: "크레딧" },
   "menu.version": { ja: "バージョン", en: "Version", zh: "版本", ko: "버전" },
 
+  // Menu - ENSO apps
+  "menu.ensoApps": { ja: "ENSO アプリ", en: "ENSO Apps", zh: "ENSO 应用", ko: "ENSO 앱" },
+  "menu.ensoTimer": { ja: "ENSO TIMER", en: "ENSO TIMER", zh: "ENSO TIMER", ko: "ENSO TIMER" },
+  "menu.ensoTimerDesc": { ja: "人生という時間を可視化する", en: "Visualize the time called life", zh: "将人生的时间可视化", ko: "인생이라는 시간을 시각화하다" },
+
   // Language names
   "lang.ja": { ja: "日本語", en: "日本語", zh: "日本語", ko: "日本語" },
   "lang.en": { ja: "English", en: "English", zh: "English", ko: "English" },

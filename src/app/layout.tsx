@@ -20,6 +20,17 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "ENSO FOCUS",
   description: "Focus is the ultimate productivity. Build deep concentration habits with the Pomodoro Technique.",
+  openGraph: {
+    title: "ENSO FOCUS",
+    description: "円相：集中する時間を作る",
+    siteName: "ENSO FOCUS",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ENSO FOCUS",
+    description: "円相：集中する時間を作る",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

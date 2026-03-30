@@ -13,7 +13,7 @@ export default function EnsoLogo({ size = 48, className = "", animate = false }:
       fill="none"
       className={className}
     >
-      {/* Emerald circle ring */}
+      {/* Circle ring */}
       <circle
         cx="50"
         cy="50"
@@ -23,15 +23,13 @@ export default function EnsoLogo({ size = 48, className = "", animate = false }:
         fill="none"
         opacity="0.9"
       />
-      {/* Dot orbiting the circle */}
-      <circle cx="50" cy="18" r="5" fill="var(--text)">
+      {/* Center dot - blinks when animated */}
+      <circle cx="50" cy="50" r="5" fill="currentColor">
         {animate && (
-          <animateTransform
-            attributeName="transform"
-            type="rotate"
-            from="0 50 50"
-            to="360 50 50"
-            dur="8s"
+          <animate
+            attributeName="opacity"
+            values="1;0.2;1"
+            dur="2.5s"
             repeatCount="indefinite"
           />
         )}
