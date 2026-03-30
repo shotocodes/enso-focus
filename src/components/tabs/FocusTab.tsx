@@ -1,8 +1,8 @@
 "use client";
 
 import { t } from "@/lib/i18n";
-import { TimerMode, TimerState, FocusTag, FOCUS_TAGS, TAG_COLORS, TAG_I18N_KEYS } from "@/types";
-import { PlayIcon, PauseIcon, SkipIcon, ExpandIcon } from "../Icons";
+import { TimerMode, TimerState, FocusTag, FOCUS_TAGS, TAG_COLORS, TAG_I18N_KEYS, AmbientSettings } from "@/types";
+import { PlayIcon, PauseIcon, SkipIcon, ExpandIcon, SpeakerOnIcon, SpeakerOffIcon } from "../Icons";
 
 interface TimerHandle {
   secondsLeft: number;
@@ -21,6 +21,8 @@ interface Props {
   onEnterFullscreen: () => void;
   selectedTag: FocusTag | null;
   onTagChange: (tag: FocusTag | null) => void;
+  ambientEnabled: boolean;
+  onAmbientToggle: () => void;
 }
 
 function formatTime(seconds: number): string {
@@ -29,7 +31,7 @@ function formatTime(seconds: number): string {
   return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
-export default function FocusTab({ timer, onEnterFullscreen, selectedTag, onTagChange }: Props) {
+export default function FocusTab({ timer, onEnterFullscreen, selectedTag, onTagChange, ambientEnabled, onAmbientToggle }: Props) {
   const { secondsLeft, totalSeconds, mode, state, start, pause, resume, reset, skip } = timer;
   const progress = totalSeconds > 0 ? (totalSeconds - secondsLeft) / totalSeconds : 0;
   const isFocus = mode === "focus";
@@ -165,15 +167,26 @@ export default function FocusTab({ timer, onEnterFullscreen, selectedTag, onTagC
         )}
       </div>
 
-      {/* Fullscreen button */}
+      {/* Bottom controls: ambient toggle + fullscreen */}
       {state !== "idle" && (
-        <button
-          onClick={onEnterFullscreen}
-          className="mt-6 flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-card text-sm text-muted hover:text-white transition-colors"
-        >
-          <ExpandIcon size={16} />
-          {t("focus.fullscreen")}
-        </button>
+        <div className="mt-6 flex items-center gap-3">
+          <button
+            onClick={onAmbientToggle}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-card text-sm transition-colors ${
+              ambientEnabled ? "text-emerald-500" : "text-muted hover:text-white"
+            }`}
+          >
+            {ambientEnabled ? <SpeakerOnIcon size={16} /> : <SpeakerOffIcon size={16} />}
+            {t("settings.ambient")}
+          </button>
+          <button
+            onClick={onEnterFullscreen}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-card text-sm text-muted hover:text-white transition-colors"
+          >
+            <ExpandIcon size={16} />
+            {t("focus.fullscreen")}
+          </button>
+        </div>
       )}
     </div>
   );

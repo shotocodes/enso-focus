@@ -44,6 +44,9 @@ const translations: Record<string, Record<Locale, string>> = {
   "history.last7days": { ja: "過去7日間", en: "Last 7 Days", zh: "过去7天", ko: "최근 7일" },
   "history.clearAll": { ja: "すべて削除", en: "Clear All", zh: "清除全部", ko: "전체 삭제" },
   "history.clearConfirm": { ja: "すべての記録を削除しますか？", en: "Clear all records?", zh: "删除所有记录？", ko: "모든 기록을 삭제하시겠습니까?" },
+  "history.period.7days": { ja: "7日間", en: "7 Days", zh: "7天", ko: "7일" },
+  "history.period.1month": { ja: "1ヶ月", en: "1 Month", zh: "1个月", ko: "1개월" },
+  "history.period.all": { ja: "すべて", en: "All", zh: "全部", ko: "전체" },
 
   // Time units
   "time.hours": { ja: "時間", en: "h", zh: "小时", ko: "시간" },
@@ -101,7 +104,7 @@ const translations: Record<string, Record<Locale, string>> = {
   "ambient.rain": { ja: "雨", en: "Rain", zh: "雨声", ko: "빗소리" },
   "ambient.fire": { ja: "焚き火", en: "Fireplace", zh: "壁炉", ko: "모닥불" },
   "ambient.whitenoise": { ja: "ホワイトノイズ", en: "White Noise", zh: "白噪音", ko: "백색소음" },
-  "ambient.cafe": { ja: "カフェ", en: "Cafe", zh: "咖啡厅", ko: "카페" },
+  "ambient.forest": { ja: "森", en: "Forest", zh: "森林", ko: "숲" },
   "ambient.waves": { ja: "波", en: "Waves", zh: "海浪", ko: "파도" },
 
   // Cross-data

@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { t } from "@/lib/i18n";
 import { getStats, getDailyStats, getSessions, clearSessions, getTagStats } from "@/lib/storage";
-import { FOCUS_TAGS, TAG_COLORS, TAG_I18N_KEYS } from "@/types";
+import { FOCUS_TAGS, TAG_COLORS, TAG_I18N_KEYS, FocusSession } from "@/types";
+
+type Period = "7days" | "1month" | "all";
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}${t("time.seconds")}`;
@@ -18,11 +20,20 @@ function formatShortDate(iso: string): string {
   return `${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getDate().toString().padStart(2, "0")} ${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
 }
 
+function filterByPeriod(sessions: FocusSession[], period: Period): FocusSession[] {
+  if (period === "all") return sessions;
+  const now = Date.now();
+  const cutoff = period === "7days" ? now - 7 * 86400000 : now - 30 * 86400000;
+  return sessions.filter((s) => new Date(s.endedAt).getTime() >= cutoff);
+}
+
 export default function HistoryTab() {
   const [version, setVersion] = useState(0);
+  const [period, setPeriod] = useState<Period>("7days");
   const stats = getStats();
   const daily = getDailyStats(7);
-  const sessions = getSessions().slice().reverse().slice(0, 20);
+  const allSessions = getSessions();
+  const filteredSessions = filterByPeriod(allSessions, period).slice().reverse();
   const tagStats = getTagStats();
   const maxDaily = Math.max(...daily.map((d) => d.duration), 1);
 
@@ -63,7 +74,6 @@ export default function HistoryTab() {
     return days[d.getDay()];
   };
 
-  // SVG donut chart params
   const donutSize = 120;
   const donutStroke = 16;
   const donutRadius = (donutSize - donutStroke) / 2;
@@ -95,7 +105,6 @@ export default function HistoryTab() {
         <div className="bg-card rounded-2xl p-4 border border-card">
           <h3 className="text-sm font-medium mb-4">{t("history.categories")}</h3>
           <div className="flex items-center gap-6">
-            {/* Donut SVG */}
             <svg width={donutSize} height={donutSize} className="shrink-0 transform -rotate-90">
               {(() => {
                 let offset = 0;
@@ -121,7 +130,6 @@ export default function HistoryTab() {
                 });
               })()}
             </svg>
-            {/* Legend */}
             <div className="flex flex-col gap-2 min-w-0">
               {donutSegments.map((seg) => (
                 <div key={seg.tag} className="flex items-center gap-2">
@@ -153,41 +161,60 @@ export default function HistoryTab() {
         </div>
       </div>
 
-      {/* Recent sessions */}
-      {sessions.length > 0 ? (
-        <div className="space-y-2">
-          {sessions.map((s) => (
-            <div key={s.id} className="py-2 px-3 bg-card rounded-xl border border-card">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {s.tag && (
-                    <span
-                      className="w-2 h-2 rounded-full shrink-0"
-                      style={{ backgroundColor: TAG_COLORS[s.tag] }}
-                    />
-                  )}
-                  <span className="text-sm text-muted">{formatShortDate(s.startedAt)}</span>
-                </div>
-                <span className="text-sm font-medium">{formatDuration(s.duration)}</span>
-              </div>
-              {s.memo && (
-                <p className="text-xs text-muted mt-1 truncate pl-4">{s.memo}</p>
-              )}
-            </div>
+      {/* Session list with period toggle */}
+      <div className="space-y-3">
+        {/* Period selector */}
+        <div className="flex gap-2">
+          {(["7days", "1month", "all"] as Period[]).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                period === p
+                  ? "bg-emerald-500 text-white"
+                  : "bg-subtle text-muted hover:text-white"
+              }`}
+            >
+              {t(`history.period.${p}`)}
+            </button>
           ))}
+        </div>
 
-          <button
-            onClick={handleClear}
-            className="w-full text-center text-xs text-red-400/60 hover:text-red-400 py-2 transition-colors"
-          >
-            {t("history.clearAll")}
-          </button>
-        </div>
-      ) : (
-        <div className="text-center text-muted text-sm py-8">
-          {t("history.noSessions")}
-        </div>
-      )}
+        {filteredSessions.length > 0 ? (
+          <div className="space-y-2">
+            {filteredSessions.map((s) => (
+              <div key={s.id} className="py-2 px-3 bg-card rounded-xl border border-card">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {s.tag && (
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: TAG_COLORS[s.tag] }}
+                      />
+                    )}
+                    <span className="text-sm text-muted">{formatShortDate(s.startedAt)}</span>
+                  </div>
+                  <span className="text-sm font-medium">{formatDuration(s.duration)}</span>
+                </div>
+                {s.memo && (
+                  <p className="text-xs text-muted mt-1 truncate pl-4">{s.memo}</p>
+                )}
+              </div>
+            ))}
+
+            <button
+              onClick={handleClear}
+              className="w-full text-center text-xs text-red-400/60 hover:text-red-400 py-2 transition-colors"
+            >
+              {t("history.clearAll")}
+            </button>
+          </div>
+        ) : (
+          <div className="text-center text-muted text-sm py-8">
+            {t("history.noSessions")}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

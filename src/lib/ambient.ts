@@ -107,32 +107,62 @@ function startWhiteNoise(audioCtx: AudioContext, gain: GainNode) {
   track(src);
 }
 
-function startCafe(audioCtx: AudioContext, gain: GainNode) {
+function startForest(audioCtx: AudioContext, gain: GainNode) {
+  // Wind through leaves - gentle filtered noise
   const src = noiseSource(audioCtx);
-  const lp = audioCtx.createBiquadFilter();
-  lp.type = "lowpass";
-  lp.frequency.value = 300;
+  const bp = audioCtx.createBiquadFilter();
+  bp.type = "bandpass";
+  bp.frequency.value = 800;
+  bp.Q.value = 0.3;
   const vol = audioCtx.createGain();
-  vol.gain.value = 0.8;
-  src.connect(lp);
-  lp.connect(vol);
+  vol.gain.value = 0.4;
+  src.connect(bp);
+  bp.connect(vol);
   vol.connect(gain);
   src.start();
   track(src);
 
+  // Rustling leaves - LFO modulated noise
+  const rustleSrc = noiseSource(audioCtx);
+  const rustleBp = audioCtx.createBiquadFilter();
+  rustleBp.type = "highpass";
+  rustleBp.frequency.value = 2000;
+  const rustleGain = audioCtx.createGain();
+  rustleGain.gain.value = 0;
+  const rustleLfo = audioCtx.createOscillator();
+  rustleLfo.type = "sine";
+  rustleLfo.frequency.value = 0.3;
+  rustleLfo.connect(rustleGain.gain);
+  rustleLfo.start();
+  track(rustleLfo);
+  rustleSrc.connect(rustleBp);
+  rustleBp.connect(rustleGain);
+  rustleGain.connect(gain);
+  rustleSrc.start();
+  track(rustleSrc);
+
+  // Distant bird calls
+  const birdNotes = [1800, 2200, 2600, 2000, 1600];
   const iv = setInterval(() => {
     if (!ctx || !masterGain) return;
-    const osc = audioCtx.createOscillator();
-    const env = audioCtx.createGain();
-    osc.type = "sine";
-    osc.frequency.value = 2000 + Math.random() * 1500;
-    env.gain.setValueAtTime(0.015, audioCtx.currentTime);
-    env.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
-    osc.connect(env);
-    env.connect(gain);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.03);
-  }, 2000 + Math.random() * 3000);
+    const noteIdx = Math.floor(Math.random() * birdNotes.length);
+    const freq = birdNotes[noteIdx] + Math.random() * 200;
+
+    // Two-tone chirp
+    for (let i = 0; i < 2; i++) {
+      const osc = audioCtx.createOscillator();
+      const env = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq + i * 300;
+      const start = audioCtx.currentTime + i * 0.08;
+      env.gain.setValueAtTime(0.025, start);
+      env.gain.exponentialRampToValueAtTime(0.001, start + 0.1);
+      osc.connect(env);
+      env.connect(gain);
+      osc.start(start);
+      osc.stop(start + 0.1);
+    }
+  }, 3000 + Math.random() * 4000);
   activeIntervals.push(iv);
 }
 
@@ -190,7 +220,7 @@ export function startAmbient(type: AmbientSoundType | "break", volume: number): 
     case "rain": startRain(audioCtx, masterGain); break;
     case "fire": startFire(audioCtx, masterGain); break;
     case "whitenoise": startWhiteNoise(audioCtx, masterGain); break;
-    case "cafe": startCafe(audioCtx, masterGain); break;
+    case "forest": startForest(audioCtx, masterGain); break;
     case "waves": startWaves(audioCtx, masterGain); break;
     case "break": startBreakSound(audioCtx, masterGain); break;
   }

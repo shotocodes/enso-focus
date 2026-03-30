@@ -64,13 +64,13 @@ export interface SoundSettings {
 }
 
 // Ambient sound
-export type AmbientSoundType = "rain" | "fire" | "whitenoise" | "cafe" | "waves";
+export type AmbientSoundType = "rain" | "fire" | "whitenoise" | "forest" | "waves";
 
 export const AMBIENT_SOUND_I18N_KEYS: Record<AmbientSoundType, string> = {
   rain: "ambient.rain",
   fire: "ambient.fire",
   whitenoise: "ambient.whitenoise",
-  cafe: "ambient.cafe",
+  forest: "ambient.forest",
   waves: "ambient.waves",
 };
 

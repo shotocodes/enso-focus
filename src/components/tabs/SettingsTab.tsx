@@ -2,15 +2,12 @@
 
 import { t } from "@/lib/i18n";
 import { Locale } from "@/lib/i18n";
-import { previewSound, setVolume } from "@/lib/sound";
-import { AmbientSettings, AmbientSoundType, AMBIENT_SOUND_I18N_KEYS, SoundSettings, ThemeMode, TimerConfig, TickSoundType, TICK_SOUND_I18N_KEYS } from "@/types";
+import { AmbientSettings, AmbientSoundType, AMBIENT_SOUND_I18N_KEYS, ThemeMode, TimerConfig } from "@/types";
 import { SpeakerOnIcon, SpeakerOffIcon } from "../Icons";
 
 interface Props {
   timerConfig: TimerConfig;
   onTimerConfigChange: (config: TimerConfig) => void;
-  soundSettings: SoundSettings;
-  onSoundSettingsChange: (settings: SoundSettings) => void;
   ambientSettings: AmbientSettings;
   onAmbientSettingsChange: (settings: AmbientSettings) => void;
   theme: ThemeMode;
@@ -25,8 +22,6 @@ const BREAK_OPTIONS = [5, 10, 15, 20];
 export default function SettingsTab({
   timerConfig,
   onTimerConfigChange,
-  soundSettings,
-  onSoundSettingsChange,
   ambientSettings,
   onAmbientSettingsChange,
   theme,
@@ -40,7 +35,6 @@ export default function SettingsTab({
       <section className="bg-card rounded-2xl p-4 border border-card space-y-4">
         <h3 className="text-sm font-medium">{t("settings.timer")}</h3>
 
-        {/* Focus duration */}
         <div>
           <label className="text-xs text-muted block mb-2">{t("settings.focusDuration")}</label>
           <div className="flex gap-2 flex-wrap">
@@ -60,7 +54,6 @@ export default function SettingsTab({
           </div>
         </div>
 
-        {/* Break duration */}
         <div>
           <label className="text-xs text-muted block mb-2">{t("settings.breakDuration")}</label>
           <div className="flex gap-2 flex-wrap">
@@ -80,7 +73,6 @@ export default function SettingsTab({
           </div>
         </div>
 
-        {/* Auto-start break */}
         <div className="flex items-center justify-between">
           <span className="text-sm">{t("settings.autoStartBreak")}</span>
           <button
@@ -94,58 +86,6 @@ export default function SettingsTab({
             }`} />
           </button>
         </div>
-      </section>
-
-      {/* Sound settings */}
-      <section className="bg-card rounded-2xl p-4 border border-card space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium">{t("settings.sound")}</h3>
-          <button
-            onClick={() => onSoundSettingsChange({ ...soundSettings, enabled: !soundSettings.enabled })}
-            className={`transition-colors ${soundSettings.enabled ? "text-emerald-500" : "text-muted"}`}
-          >
-            {soundSettings.enabled ? <SpeakerOnIcon size={20} /> : <SpeakerOffIcon size={20} />}
-          </button>
-        </div>
-
-        {soundSettings.enabled && (
-          <>
-            <div>
-              <label className="text-xs text-muted block mb-2">{t("settings.soundType")}</label>
-              <div className="flex gap-2">
-                {(["classic", "soft", "digital"] as TickSoundType[]).map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => {
-                      onSoundSettingsChange({ ...soundSettings, tickSound: type });
-                      setVolume(soundSettings.volume);
-                      previewSound(type);
-                    }}
-                    className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                      soundSettings.tickSound === type
-                        ? "bg-emerald-500 text-white"
-                        : "bg-subtle text-muted hover:text-white"
-                    }`}
-                  >
-                    {t(TICK_SOUND_I18N_KEYS[type])}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs text-muted block mb-2">{t("settings.volume")}</label>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={soundSettings.volume * 100}
-                onChange={(e) => onSoundSettingsChange({ ...soundSettings, volume: Number(e.target.value) / 100 })}
-                className="w-full accent-emerald-500"
-              />
-            </div>
-          </>
-        )}
       </section>
 
       {/* Ambient sound settings */}
@@ -165,7 +105,7 @@ export default function SettingsTab({
             <div>
               <label className="text-xs text-muted block mb-2">{t("settings.ambientType")}</label>
               <div className="flex gap-2 flex-wrap">
-                {(["rain", "fire", "whitenoise", "cafe", "waves"] as AmbientSoundType[]).map((type) => (
+                {(["rain", "fire", "whitenoise", "forest", "waves"] as AmbientSoundType[]).map((type) => (
                   <button
                     key={type}
                     onClick={() => onAmbientSettingsChange({ ...ambientSettings, type })}

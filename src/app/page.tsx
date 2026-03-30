@@ -1,13 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { AmbientSettings, FocusTag, SoundSettings, TabId, ThemeMode, TimerConfig, TimerMode, DEFAULT_TIMER_CONFIG } from "@/types";
+import { AmbientSettings, FocusTag, TabId, ThemeMode, TimerConfig, TimerMode, DEFAULT_TIMER_CONFIG } from "@/types";
 import { Locale, setLocale, t } from "@/lib/i18n";
 import {
   getTimerConfig,
   saveTimerConfig,
-  getSoundSettings,
-  saveSoundSettings,
   getAmbientSettings,
   saveAmbientSettings,
   getActiveTab,
@@ -44,9 +42,6 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("focus");
   const [timerConfig, setTimerConfig] = useState<TimerConfig>(DEFAULT_TIMER_CONFIG);
-  const [soundSettings, setSoundSettings] = useState<SoundSettings>({
-    enabled: false, tickSound: "classic", volume: 0.5,
-  });
   const [ambientSettings, setAmbientSettings] = useState<AmbientSettings>({
     enabled: false, type: "rain", volume: 0.3,
   });
@@ -107,7 +102,6 @@ export default function Home() {
 
   useEffect(() => {
     setTimerConfig(getTimerConfig());
-    setSoundSettings(getSoundSettings());
     setAmbientSettings(getAmbientSettings());
     setActiveTab(getActiveTab());
 
@@ -163,11 +157,6 @@ export default function Home() {
     saveTimerConfig(config);
   }, []);
 
-  const handleSoundSettingsChange = useCallback((settings: SoundSettings) => {
-    setSoundSettings(settings);
-    saveSoundSettings(settings);
-  }, []);
-
   const handleAmbientSettingsChange = useCallback((settings: AmbientSettings) => {
     setAmbientSettings(settings);
     saveAmbientSettings(settings);
@@ -184,6 +173,12 @@ export default function Home() {
     saveLocaleStorage(newLocale);
     setLocaleState(newLocale);
   }, []);
+
+  const handleAmbientToggle = useCallback(() => {
+    const updated = { ...ambientSettings, enabled: !ambientSettings.enabled };
+    setAmbientSettings(updated);
+    saveAmbientSettings(updated);
+  }, [ambientSettings]);
 
   const handleTagChange = useCallback((tag: FocusTag | null) => {
     setSelectedTag(tag);
@@ -248,6 +243,8 @@ export default function Home() {
             onEnterFullscreen={handleEnterFullscreen}
             selectedTag={selectedTag}
             onTagChange={handleTagChange}
+            ambientEnabled={ambientSettings.enabled}
+            onAmbientToggle={handleAmbientToggle}
           />
         )}
         {activeTab === "history" && (
@@ -258,8 +255,6 @@ export default function Home() {
             key={locale}
             timerConfig={timerConfig}
             onTimerConfigChange={handleTimerConfigChange}
-            soundSettings={soundSettings}
-            onSoundSettingsChange={handleSoundSettingsChange}
             ambientSettings={ambientSettings}
             onAmbientSettingsChange={handleAmbientSettingsChange}
             theme={theme}
