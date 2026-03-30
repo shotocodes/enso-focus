@@ -144,7 +144,7 @@ export default function Home() {
 
   return (
     <>
-      <main className="min-h-screen max-w-lg mx-auto px-4 pt-6 pb-24">
+      <main className="min-h-screen max-w-lg mx-auto px-4 pt-[max(1.5rem,env(safe-area-inset-top))] pb-24">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-bold tracking-tight">{t("app.name", locale)}</h1>
           <p className="text-xs text-muted mt-0.5">{t("app.tagline", locale)}</p>
