@@ -78,10 +78,42 @@ const translations: Record<string, Record<Locale, string>> = {
   "menu.credits": { ja: "クレジット", en: "Credits", zh: "制作信息", ko: "크레딧" },
   "menu.version": { ja: "バージョン", en: "Version", zh: "版本", ko: "버전" },
 
+  // Tags
+  "tag.select": { ja: "カテゴリ", en: "Category", zh: "分类", ko: "카테고리" },
+  "tag.work": { ja: "仕事", en: "Work", zh: "工作", ko: "업무" },
+  "tag.study": { ja: "勉強", en: "Study", zh: "学习", ko: "공부" },
+  "tag.creative": { ja: "創作", en: "Creative", zh: "创作", ko: "창작" },
+  "tag.exercise": { ja: "運動", en: "Exercise", zh: "运动", ko: "운동" },
+  "tag.reading": { ja: "読書", en: "Reading", zh: "阅读", ko: "독서" },
+  "history.categories": { ja: "カテゴリ別", en: "By Category", zh: "按分类", ko: "카테고리별" },
+  "history.noTag": { ja: "未分類", en: "Uncategorized", zh: "未分类", ko: "미분류" },
+
+  // Completion memo
+  "memo.title": { ja: "セッション完了！", en: "Session Complete!", zh: "专注完成！", ko: "세션 완료!" },
+  "memo.placeholder": { ja: "何に集中した？", en: "What did you focus on?", zh: "你专注了什么？", ko: "무엇에 집중했나요?" },
+  "memo.save": { ja: "保存", en: "Save", zh: "保存", ko: "저장" },
+  "memo.skip": { ja: "スキップ", en: "Skip", zh: "跳过", ko: "건너뛰기" },
+
+  // Ambient sounds
+  "settings.ambient": { ja: "環境音", en: "Ambient Sound", zh: "环境音", ko: "환경음" },
+  "settings.ambientType": { ja: "環境音の種類", en: "Sound Type", zh: "环境音类型", ko: "환경음 종류" },
+  "settings.ambientVolume": { ja: "環境音の音量", en: "Ambient Volume", zh: "环境音音量", ko: "환경음 음량" },
+  "ambient.rain": { ja: "雨", en: "Rain", zh: "雨声", ko: "빗소리" },
+  "ambient.fire": { ja: "焚き火", en: "Fireplace", zh: "壁炉", ko: "모닥불" },
+  "ambient.whitenoise": { ja: "ホワイトノイズ", en: "White Noise", zh: "白噪音", ko: "백색소음" },
+  "ambient.cafe": { ja: "カフェ", en: "Cafe", zh: "咖啡厅", ko: "카페" },
+  "ambient.waves": { ja: "波", en: "Waves", zh: "海浪", ko: "파도" },
+
+  // Cross-data
+  "menu.focusLifePercent": { ja: "今日の集中 = 人生の {0}", en: "Today's focus = {0} of life", zh: "今日专注 = 人生的 {0}", ko: "오늘의 집중 = 인생의 {0}" },
+
   // Menu - ENSO apps
   "menu.ensoApps": { ja: "ENSO アプリ", en: "ENSO Apps", zh: "ENSO 应用", ko: "ENSO 앱" },
   "menu.ensoTimer": { ja: "ENSO TIMER", en: "ENSO TIMER", zh: "ENSO TIMER", ko: "ENSO TIMER" },
   "menu.ensoTimerDesc": { ja: "人生という時間を可視化する", en: "Visualize the time called life", zh: "将人生的时间可视化", ko: "인생이라는 시간을 시각화하다" },
+  "menu.ensoMind": { ja: "ENSO MIND", en: "ENSO MIND", zh: "ENSO MIND", ko: "ENSO MIND" },
+  "menu.ensoMindDesc": { ja: "内省と振り返り", en: "Reflection & mindfulness", zh: "内省与回顾", ko: "내성과 되돌아보기" },
+  "menu.comingSoon": { ja: "Coming Soon", en: "Coming Soon", zh: "即将推出", ko: "출시 예정" },
 
   // Language names
   "lang.ja": { ja: "日本語", en: "日本語", zh: "日本語", ko: "日本語" },
@@ -101,4 +133,12 @@ export function t(key: string, locale?: Locale): string {
 
 export function setLocale(locale: Locale): void {
   _locale = locale;
+}
+
+export function tFormat(key: string, locale?: Locale, ...args: string[]): string {
+  let result = t(key, locale);
+  args.forEach((arg, i) => {
+    result = result.replace(`{${i}}`, arg);
+  });
+  return result;
 }

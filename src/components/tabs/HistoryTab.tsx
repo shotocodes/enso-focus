@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { t } from "@/lib/i18n";
-import { getStats, getDailyStats, getSessions, clearSessions } from "@/lib/storage";
+import { getStats, getDailyStats, getSessions, clearSessions, getTagStats } from "@/lib/storage";
+import { FOCUS_TAGS, TAG_COLORS, TAG_I18N_KEYS } from "@/types";
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}${t("time.seconds")}`;
@@ -22,7 +23,32 @@ export default function HistoryTab() {
   const stats = getStats();
   const daily = getDailyStats(7);
   const sessions = getSessions().slice().reverse().slice(0, 20);
+  const tagStats = getTagStats();
   const maxDaily = Math.max(...daily.map((d) => d.duration), 1);
+
+  // Donut chart data
+  const totalTagDuration = Object.values(tagStats).reduce((a, b) => a + b, 0);
+  const donutSegments: { tag: string; color: string; label: string; percent: number }[] = [];
+  if (totalTagDuration > 0) {
+    for (const tag of FOCUS_TAGS) {
+      if (tagStats[tag]) {
+        donutSegments.push({
+          tag,
+          color: TAG_COLORS[tag],
+          label: t(TAG_I18N_KEYS[tag]),
+          percent: tagStats[tag] / totalTagDuration,
+        });
+      }
+    }
+    if (tagStats["none"]) {
+      donutSegments.push({
+        tag: "none",
+        color: "rgba(128,128,128,0.4)",
+        label: t("history.noTag"),
+        percent: tagStats["none"] / totalTagDuration,
+      });
+    }
+  }
 
   const handleClear = () => {
     if (confirm(t("history.clearConfirm"))) {
@@ -31,12 +57,17 @@ export default function HistoryTab() {
     }
   };
 
-  // Day label
   const dayLabel = (dateStr: string) => {
     const d = new Date(dateStr);
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     return days[d.getDay()];
   };
+
+  // SVG donut chart params
+  const donutSize = 120;
+  const donutStroke = 16;
+  const donutRadius = (donutSize - donutStroke) / 2;
+  const donutCircumference = 2 * Math.PI * donutRadius;
 
   return (
     <div className="animate-tab-enter space-y-6" key={version}>
@@ -55,10 +86,54 @@ export default function HistoryTab() {
         ))}
       </div>
 
-      {/* Total sessions count */}
       <div className="text-center text-sm text-muted">
         {stats.totalSessions} {t("history.sessions")}
       </div>
+
+      {/* Category donut chart */}
+      {donutSegments.length > 0 && (
+        <div className="bg-card rounded-2xl p-4 border border-card">
+          <h3 className="text-sm font-medium mb-4">{t("history.categories")}</h3>
+          <div className="flex items-center gap-6">
+            {/* Donut SVG */}
+            <svg width={donutSize} height={donutSize} className="shrink-0 transform -rotate-90">
+              {(() => {
+                let offset = 0;
+                return donutSegments.map((seg) => {
+                  const dash = seg.percent * donutCircumference;
+                  const gap = donutCircumference - dash;
+                  const el = (
+                    <circle
+                      key={seg.tag}
+                      cx={donutSize / 2}
+                      cy={donutSize / 2}
+                      r={donutRadius}
+                      fill="none"
+                      stroke={seg.color}
+                      strokeWidth={donutStroke}
+                      strokeDasharray={`${dash} ${gap}`}
+                      strokeDashoffset={-offset}
+                      strokeLinecap="round"
+                    />
+                  );
+                  offset += dash;
+                  return el;
+                });
+              })()}
+            </svg>
+            {/* Legend */}
+            <div className="flex flex-col gap-2 min-w-0">
+              {donutSegments.map((seg) => (
+                <div key={seg.tag} className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: seg.color }} />
+                  <span className="text-xs truncate">{seg.label}</span>
+                  <span className="text-xs text-muted ml-auto">{Math.round(seg.percent * 100)}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 7-day chart */}
       <div className="bg-card rounded-2xl p-4 border border-card">
@@ -82,9 +157,22 @@ export default function HistoryTab() {
       {sessions.length > 0 ? (
         <div className="space-y-2">
           {sessions.map((s) => (
-            <div key={s.id} className="flex items-center justify-between py-2 px-3 bg-card rounded-xl border border-card">
-              <span className="text-sm text-muted">{formatShortDate(s.startedAt)}</span>
-              <span className="text-sm font-medium">{formatDuration(s.duration)}</span>
+            <div key={s.id} className="py-2 px-3 bg-card rounded-xl border border-card">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {s.tag && (
+                    <span
+                      className="w-2 h-2 rounded-full shrink-0"
+                      style={{ backgroundColor: TAG_COLORS[s.tag] }}
+                    />
+                  )}
+                  <span className="text-sm text-muted">{formatShortDate(s.startedAt)}</span>
+                </div>
+                <span className="text-sm font-medium">{formatDuration(s.duration)}</span>
+              </div>
+              {s.memo && (
+                <p className="text-xs text-muted mt-1 truncate pl-4">{s.memo}</p>
+              )}
             </div>
           ))}
 

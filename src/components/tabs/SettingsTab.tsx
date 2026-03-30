@@ -3,7 +3,7 @@
 import { t } from "@/lib/i18n";
 import { Locale } from "@/lib/i18n";
 import { previewSound, setVolume } from "@/lib/sound";
-import { SoundSettings, ThemeMode, TimerConfig, TickSoundType, TICK_SOUND_I18N_KEYS } from "@/types";
+import { AmbientSettings, AmbientSoundType, AMBIENT_SOUND_I18N_KEYS, SoundSettings, ThemeMode, TimerConfig, TickSoundType, TICK_SOUND_I18N_KEYS } from "@/types";
 import { SpeakerOnIcon, SpeakerOffIcon } from "../Icons";
 
 interface Props {
@@ -11,6 +11,8 @@ interface Props {
   onTimerConfigChange: (config: TimerConfig) => void;
   soundSettings: SoundSettings;
   onSoundSettingsChange: (settings: SoundSettings) => void;
+  ambientSettings: AmbientSettings;
+  onAmbientSettingsChange: (settings: AmbientSettings) => void;
   theme: ThemeMode;
   onThemeChange: (theme: ThemeMode) => void;
   locale: Locale;
@@ -25,6 +27,8 @@ export default function SettingsTab({
   onTimerConfigChange,
   soundSettings,
   onSoundSettingsChange,
+  ambientSettings,
+  onAmbientSettingsChange,
   theme,
   onThemeChange,
   locale,
@@ -137,6 +141,54 @@ export default function SettingsTab({
                 max={100}
                 value={soundSettings.volume * 100}
                 onChange={(e) => onSoundSettingsChange({ ...soundSettings, volume: Number(e.target.value) / 100 })}
+                className="w-full accent-emerald-500"
+              />
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* Ambient sound settings */}
+      <section className="bg-card rounded-2xl p-4 border border-card space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium">{t("settings.ambient")}</h3>
+          <button
+            onClick={() => onAmbientSettingsChange({ ...ambientSettings, enabled: !ambientSettings.enabled })}
+            className={`transition-colors ${ambientSettings.enabled ? "text-emerald-500" : "text-muted"}`}
+          >
+            {ambientSettings.enabled ? <SpeakerOnIcon size={20} /> : <SpeakerOffIcon size={20} />}
+          </button>
+        </div>
+
+        {ambientSettings.enabled && (
+          <>
+            <div>
+              <label className="text-xs text-muted block mb-2">{t("settings.ambientType")}</label>
+              <div className="flex gap-2 flex-wrap">
+                {(["rain", "fire", "whitenoise", "cafe", "waves"] as AmbientSoundType[]).map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => onAmbientSettingsChange({ ...ambientSettings, type })}
+                    className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                      ambientSettings.type === type
+                        ? "bg-emerald-500 text-white"
+                        : "bg-subtle text-muted hover:text-white"
+                    }`}
+                  >
+                    {t(AMBIENT_SOUND_I18N_KEYS[type])}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs text-muted block mb-2">{t("settings.ambientVolume")}</label>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={ambientSettings.volume * 100}
+                onChange={(e) => onAmbientSettingsChange({ ...ambientSettings, volume: Number(e.target.value) / 100 })}
                 className="w-full accent-emerald-500"
               />
             </div>

@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { SoundSettings, TabId, ThemeMode, TimerConfig, TimerMode, DEFAULT_TIMER_CONFIG } from "@/types";
+import { AmbientSettings, FocusTag, SoundSettings, TabId, ThemeMode, TimerConfig, TimerMode, DEFAULT_TIMER_CONFIG } from "@/types";
 import { Locale, setLocale, t } from "@/lib/i18n";
 import {
   getTimerConfig,
   saveTimerConfig,
   getSoundSettings,
   saveSoundSettings,
+  getAmbientSettings,
+  saveAmbientSettings,
   getActiveTab,
   saveActiveTab,
   getTheme,
@@ -23,7 +25,9 @@ import HistoryTab from "@/components/tabs/HistoryTab";
 import SettingsTab from "@/components/tabs/SettingsTab";
 import MenuTab from "@/components/tabs/MenuTab";
 import FullscreenFocus from "@/components/FullscreenFocus";
+import CompletionModal from "@/components/CompletionModal";
 import { useTimer } from "@/hooks/useTimer";
+import { useAmbientSound } from "@/hooks/useAmbientSound";
 
 function applyTheme(theme: ThemeMode) {
   if (typeof document === "undefined") return;
@@ -43,10 +47,21 @@ export default function Home() {
   const [soundSettings, setSoundSettings] = useState<SoundSettings>({
     enabled: false, tickSound: "classic", volume: 0.5,
   });
+  const [ambientSettings, setAmbientSettings] = useState<AmbientSettings>({
+    enabled: false, type: "rain", volume: 0.3,
+  });
   const [theme, setThemeState] = useState<ThemeMode>("dark");
   const [locale, setLocaleState] = useState<Locale>("ja");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [sessionVersion, setSessionVersion] = useState(0);
+  const [selectedTag, setSelectedTag] = useState<FocusTag | null>(null);
+
+  // Completion modal state
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [pendingSessionData, setPendingSessionData] = useState<{
+    startedAt: string; endedAt: string; duration: number; tag?: FocusTag;
+  } | null>(null);
+
   const sessionStartRef = useRef<string | null>(null);
 
   const handleTimerComplete = useCallback((mode: TimerMode) => {
@@ -54,16 +69,31 @@ export default function Home() {
       const now = new Date().toISOString();
       const startTime = new Date(sessionStartRef.current).getTime();
       const duration = Math.round((Date.now() - startTime) / 1000);
-      addSession({ startedAt: sessionStartRef.current, endedAt: now, duration });
+      // Store pending data - wait for memo modal
+      setPendingSessionData({
+        startedAt: sessionStartRef.current,
+        endedAt: now,
+        duration,
+        tag: selectedTag ?? undefined,
+      });
       sessionStartRef.current = null;
-      setSessionVersion((v) => v + 1);
+      setShowCompletionModal(true);
       playCelebration();
     } else if (mode === "break") {
       playAlert();
     }
-  }, []);
+  }, [selectedTag]);
 
   const timer = useTimer({ config: timerConfig, onComplete: handleTimerComplete });
+
+  // Ambient sound hook
+  useAmbientSound({
+    enabled: ambientSettings.enabled,
+    type: ambientSettings.type,
+    volume: ambientSettings.volume,
+    isPlaying: timer.state === "running",
+    mode: timer.mode,
+  });
 
   // Track session start
   useEffect(() => {
@@ -78,6 +108,7 @@ export default function Home() {
   useEffect(() => {
     setTimerConfig(getTimerConfig());
     setSoundSettings(getSoundSettings());
+    setAmbientSettings(getAmbientSettings());
     setActiveTab(getActiveTab());
 
     const storedTheme = getTheme();
@@ -103,6 +134,25 @@ export default function Home() {
     return () => mq.removeEventListener("change", handler);
   }, [theme]);
 
+  // Completion modal handlers
+  const handleMemoSave = useCallback((memo: string) => {
+    if (pendingSessionData) {
+      addSession({ ...pendingSessionData, memo: memo || undefined });
+      setSessionVersion((v) => v + 1);
+    }
+    setPendingSessionData(null);
+    setShowCompletionModal(false);
+  }, [pendingSessionData]);
+
+  const handleMemoSkip = useCallback(() => {
+    if (pendingSessionData) {
+      addSession(pendingSessionData);
+      setSessionVersion((v) => v + 1);
+    }
+    setPendingSessionData(null);
+    setShowCompletionModal(false);
+  }, [pendingSessionData]);
+
   const handleTabChange = useCallback((tab: TabId) => {
     setActiveTab(tab);
     saveActiveTab(tab);
@@ -118,6 +168,11 @@ export default function Home() {
     saveSoundSettings(settings);
   }, []);
 
+  const handleAmbientSettingsChange = useCallback((settings: AmbientSettings) => {
+    setAmbientSettings(settings);
+    saveAmbientSettings(settings);
+  }, []);
+
   const handleThemeChange = useCallback((newTheme: ThemeMode) => {
     setThemeState(newTheme);
     saveTheme(newTheme);
@@ -130,6 +185,10 @@ export default function Home() {
     setLocaleState(newLocale);
   }, []);
 
+  const handleTagChange = useCallback((tag: FocusTag | null) => {
+    setSelectedTag(tag);
+  }, []);
+
   const handleEnterFullscreen = useCallback(() => {
     setIsFullscreen(true);
     document.documentElement.requestFullscreen?.().catch(() => {});
@@ -140,7 +199,6 @@ export default function Home() {
     document.exitFullscreen?.().catch(() => {});
   }, []);
 
-  // Sync fullscreen state with browser
   useEffect(() => {
     const handler = () => {
       if (!document.fullscreenElement) {
@@ -188,6 +246,8 @@ export default function Home() {
             key={locale}
             timer={timer}
             onEnterFullscreen={handleEnterFullscreen}
+            selectedTag={selectedTag}
+            onTagChange={handleTagChange}
           />
         )}
         {activeTab === "history" && (
@@ -200,6 +260,8 @@ export default function Home() {
             onTimerConfigChange={handleTimerConfigChange}
             soundSettings={soundSettings}
             onSoundSettingsChange={handleSoundSettingsChange}
+            ambientSettings={ambientSettings}
+            onAmbientSettingsChange={handleAmbientSettingsChange}
             theme={theme}
             onThemeChange={handleThemeChange}
             locale={locale}
@@ -210,6 +272,16 @@ export default function Home() {
       </main>
 
       <BottomTabBar key={locale} activeTab={activeTab} onTabChange={handleTabChange} />
+
+      {/* Completion modal */}
+      {showCompletionModal && pendingSessionData && (
+        <CompletionModal
+          duration={pendingSessionData.duration}
+          tag={pendingSessionData.tag}
+          onSave={handleMemoSave}
+          onSkip={handleMemoSkip}
+        />
+      )}
     </>
   );
 }

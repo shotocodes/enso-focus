@@ -1,4 +1,4 @@
-import { FocusSession, SoundSettings, TabId, ThemeMode, TimerConfig, DEFAULT_TIMER_CONFIG } from "@/types";
+import { AmbientSettings, FocusSession, FocusTag, SoundSettings, TabId, ThemeMode, TimerConfig, DEFAULT_TIMER_CONFIG } from "@/types";
 import { Locale } from "./i18n";
 
 const PREFIX = "enso-focus-";
@@ -130,6 +130,40 @@ export function getTheme(): ThemeMode {
 }
 export function saveTheme(theme: ThemeMode): void {
   set("theme", theme);
+}
+
+// Ambient settings
+export function getAmbientSettings(): AmbientSettings {
+  return get("ambient", { enabled: false, type: "rain" as const, volume: 0.3 });
+}
+export function saveAmbientSettings(s: AmbientSettings): void {
+  set("ambient", s);
+}
+
+// Tag stats
+export function getTagStats(): Record<string, number> {
+  const sessions = getSessions();
+  const result: Record<string, number> = {};
+  for (const s of sessions) {
+    const key = s.tag || "none";
+    result[key] = (result[key] || 0) + s.duration;
+  }
+  return result;
+}
+
+// Cross-app: read ENSO TIMER life config (READ-ONLY)
+export function getEnsoTimerLifeConfig(): { birthDate: string; lifeExpectancy: number } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    // Try current key first, then legacy
+    const raw = localStorage.getItem("enso-timer-life-config") || localStorage.getItem("enso-life-config") || localStorage.getItem("lifft-life-config");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed?.birthDate && typeof parsed?.lifeExpectancy === "number") return parsed;
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 // Locale
