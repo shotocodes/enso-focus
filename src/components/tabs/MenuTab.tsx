@@ -20,7 +20,7 @@ export default function MenuTab() {
       <div className="bg-card rounded-2xl p-5 border border-card">
         <h3 className="text-sm font-bold mb-3">{t("menu.ensoApps")}</h3>
         <a
-          href="https://lifft-timer.vercel.app"
+          href="https://enso-timer.vercel.app"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-3 p-3 -mx-1 rounded-xl hover:bg-subtle transition-colors"
