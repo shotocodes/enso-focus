@@ -101,10 +101,10 @@ const translations: Record<string, Record<Locale, string>> = {
   "settings.ambient": { ja: "環境音", en: "Ambient Sound", zh: "环境音", ko: "환경음" },
   "settings.ambientType": { ja: "環境音の種類", en: "Sound Type", zh: "环境音类型", ko: "환경음 종류" },
   "settings.ambientVolume": { ja: "環境音の音量", en: "Ambient Volume", zh: "环境音音量", ko: "환경음 음량" },
-  "ambient.rain": { ja: "雨", en: "Rain", zh: "雨声", ko: "빗소리" },
+  "ambient.thunder": { ja: "雷雨", en: "Thunder", zh: "雷雨", ko: "천둥" },
   "ambient.fire": { ja: "焚き火", en: "Fireplace", zh: "壁炉", ko: "모닥불" },
   "ambient.whitenoise": { ja: "ホワイトノイズ", en: "White Noise", zh: "白噪音", ko: "백색소음" },
-  "ambient.forest": { ja: "森", en: "Forest", zh: "森林", ko: "숲" },
+  "ambient.birds": { ja: "小鳥", en: "Birds", zh: "鸟鸣", ko: "새소리" },
   "ambient.waves": { ja: "波", en: "Waves", zh: "海浪", ko: "파도" },
 
   // Cross-data

@@ -16,10 +16,10 @@ const API_BASE = "https://freesound.org/apiv2";
 
 // Curated search queries for each ambient type
 const SOUND_QUERIES: Record<AmbientSoundType, { query: string; minDuration: number; maxDuration: number }> = {
-  rain: { query: "rain ambient loop", minDuration: 30, maxDuration: 300 },
+  thunder: { query: "thunderstorm rain thunder ambient", minDuration: 30, maxDuration: 300 },
   fire: { query: "fireplace crackling loop", minDuration: 30, maxDuration: 300 },
   whitenoise: { query: "white noise ambient", minDuration: 30, maxDuration: 300 },
-  forest: { query: "forest birds wind ambient", minDuration: 30, maxDuration: 300 },
+  birds: { query: "birds singing chirping morning ambient", minDuration: 30, maxDuration: 300 },
   waves: { query: "ocean waves ambient loop", minDuration: 30, maxDuration: 300 },
 };
 

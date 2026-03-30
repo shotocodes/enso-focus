@@ -41,33 +41,56 @@ function track(node: AudioNode): AudioNode {
   return node;
 }
 
-function startRain(audioCtx: AudioContext, gain: GainNode) {
-  // Filtered noise base
+function startThunder(audioCtx: AudioContext, gain: GainNode) {
+  // Heavy rain base
   const src = noiseSource(audioCtx);
   const bp = audioCtx.createBiquadFilter();
   bp.type = "bandpass";
-  bp.frequency.value = 3000;
-  bp.Q.value = 0.5;
+  bp.frequency.value = 2500;
+  bp.Q.value = 0.4;
+  const rainVol = audioCtx.createGain();
+  rainVol.gain.value = 0.7;
   src.connect(bp);
-  bp.connect(gain);
+  bp.connect(rainVol);
+  rainVol.connect(gain);
   src.start();
   track(src);
 
-  // Random drips
-  const iv = setInterval(() => {
+  // Rain drips
+  const dripIv = setInterval(() => {
     if (!ctx || !masterGain) return;
     const osc = audioCtx.createOscillator();
     const env = audioCtx.createGain();
     osc.type = "sine";
     osc.frequency.value = 2000 + Math.random() * 2000;
-    env.gain.setValueAtTime(0.02, audioCtx.currentTime);
+    env.gain.setValueAtTime(0.015, audioCtx.currentTime);
     env.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
     osc.connect(env);
     env.connect(gain);
     osc.start();
     osc.stop(audioCtx.currentTime + 0.03);
-  }, 200 + Math.random() * 300);
-  activeIntervals.push(iv);
+  }, 150 + Math.random() * 250);
+  activeIntervals.push(dripIv);
+
+  // Thunder rumble - low frequency burst every 8-20 seconds
+  const thunderIv = setInterval(() => {
+    if (!ctx || !masterGain) return;
+    const thunder = noiseSource(audioCtx);
+    const lp = audioCtx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 150 + Math.random() * 100;
+    const env = audioCtx.createGain();
+    const start = audioCtx.currentTime;
+    env.gain.setValueAtTime(0.001, start);
+    env.gain.linearRampToValueAtTime(0.12 + Math.random() * 0.08, start + 0.3);
+    env.gain.exponentialRampToValueAtTime(0.001, start + 1.5 + Math.random() * 1.5);
+    thunder.connect(lp);
+    lp.connect(env);
+    env.connect(gain);
+    thunder.start();
+    thunder.stop(start + 3);
+  }, 8000 + Math.random() * 12000);
+  activeIntervals.push(thunderIv);
 }
 
 function startFire(audioCtx: AudioContext, gain: GainNode) {
@@ -109,63 +132,69 @@ function startWhiteNoise(audioCtx: AudioContext, gain: GainNode) {
   track(src);
 }
 
-function startForest(audioCtx: AudioContext, gain: GainNode) {
-  // Wind through leaves - gentle filtered noise
+function startBirds(audioCtx: AudioContext, gain: GainNode) {
+  // Very soft wind bed
   const src = noiseSource(audioCtx);
   const bp = audioCtx.createBiquadFilter();
   bp.type = "bandpass";
-  bp.frequency.value = 800;
-  bp.Q.value = 0.3;
+  bp.frequency.value = 600;
+  bp.Q.value = 0.2;
   const vol = audioCtx.createGain();
-  vol.gain.value = 0.4;
+  vol.gain.value = 0.15;
   src.connect(bp);
   bp.connect(vol);
   vol.connect(gain);
   src.start();
   track(src);
 
-  // Rustling leaves - LFO modulated noise
-  const rustleSrc = noiseSource(audioCtx);
-  const rustleBp = audioCtx.createBiquadFilter();
-  rustleBp.type = "highpass";
-  rustleBp.frequency.value = 2000;
-  const rustleGain = audioCtx.createGain();
-  rustleGain.gain.value = 0;
-  const rustleLfo = audioCtx.createOscillator();
-  rustleLfo.type = "sine";
-  rustleLfo.frequency.value = 0.3;
-  rustleLfo.connect(rustleGain.gain);
-  rustleLfo.start();
-  track(rustleLfo);
-  rustleSrc.connect(rustleBp);
-  rustleBp.connect(rustleGain);
-  rustleGain.connect(gain);
-  rustleSrc.start();
-  track(rustleSrc);
+  // Bird song patterns - multiple species
+  const patterns = [
+    { freqs: [2400, 2800, 2400], dur: 0.06, gap: 0.07, vol: 0.04 },  // Quick chirp
+    { freqs: [1800, 2200, 2600, 2200], dur: 0.1, gap: 0.08, vol: 0.03 },  // Warble
+    { freqs: [3200, 3000], dur: 0.08, gap: 0.12, vol: 0.025 },  // Tweet
+    { freqs: [1600, 2000, 1800, 2200, 2000], dur: 0.07, gap: 0.06, vol: 0.035 },  // Trill
+  ];
 
-  // Distant bird calls
-  const birdNotes = [1800, 2200, 2600, 2000, 1600];
   const iv = setInterval(() => {
     if (!ctx || !masterGain) return;
-    const noteIdx = Math.floor(Math.random() * birdNotes.length);
-    const freq = birdNotes[noteIdx] + Math.random() * 200;
+    const pattern = patterns[Math.floor(Math.random() * patterns.length)];
+    const baseTime = audioCtx.currentTime;
 
-    // Two-tone chirp
-    for (let i = 0; i < 2; i++) {
+    pattern.freqs.forEach((freq, i) => {
       const osc = audioCtx.createOscillator();
       const env = audioCtx.createGain();
       osc.type = "sine";
-      osc.frequency.value = freq + i * 300;
-      const start = audioCtx.currentTime + i * 0.08;
-      env.gain.setValueAtTime(0.025, start);
-      env.gain.exponentialRampToValueAtTime(0.001, start + 0.1);
+      osc.frequency.value = freq + (Math.random() - 0.5) * 200;
+      const start = baseTime + i * (pattern.dur + pattern.gap);
+      env.gain.setValueAtTime(pattern.vol, start);
+      env.gain.exponentialRampToValueAtTime(0.001, start + pattern.dur);
       osc.connect(env);
       env.connect(gain);
       osc.start(start);
-      osc.stop(start + 0.1);
-    }
-  }, 3000 + Math.random() * 4000);
+      osc.stop(start + pattern.dur + 0.01);
+    });
+  }, 1500 + Math.random() * 3000);
   activeIntervals.push(iv);
+
+  // Distant cuckoo-like call
+  const cuckooIv = setInterval(() => {
+    if (!ctx || !masterGain) return;
+    const notes = [1200, 900];
+    notes.forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const env = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      const start = audioCtx.currentTime + i * 0.35;
+      env.gain.setValueAtTime(0.02, start);
+      env.gain.exponentialRampToValueAtTime(0.001, start + 0.25);
+      osc.connect(env);
+      env.connect(gain);
+      osc.start(start);
+      osc.stop(start + 0.25);
+    });
+  }, 6000 + Math.random() * 8000);
+  activeIntervals.push(cuckooIv);
 }
 
 function startWaves(audioCtx: AudioContext, gain: GainNode) {
@@ -225,10 +254,10 @@ function startGeneratedFallback(type: AmbientSoundType | "break", volume: number
   masterGain.gain.value = Math.max(0, Math.min(1, volume));
 
   switch (type) {
-    case "rain": startRain(audioCtx, masterGain); break;
+    case "thunder": startThunder(audioCtx, masterGain); break;
     case "fire": startFire(audioCtx, masterGain); break;
     case "whitenoise": startWhiteNoise(audioCtx, masterGain); break;
-    case "forest": startForest(audioCtx, masterGain); break;
+    case "birds": startBirds(audioCtx, masterGain); break;
     case "waves": startWaves(audioCtx, masterGain); break;
     case "break": startBreakSound(audioCtx, masterGain); break;
   }

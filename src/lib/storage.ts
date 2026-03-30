@@ -134,7 +134,7 @@ export function saveTheme(theme: ThemeMode): void {
 
 // Ambient settings
 export function getAmbientSettings(): AmbientSettings {
-  return get("ambient", { enabled: false, type: "rain" as const, volume: 0.3 });
+  return get("ambient", { enabled: false, type: "thunder" as const, volume: 0.3 });
 }
 export function saveAmbientSettings(s: AmbientSettings): void {
   set("ambient", s);

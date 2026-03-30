@@ -105,7 +105,7 @@ export default function SettingsTab({
             <div>
               <label className="text-xs text-muted block mb-2">{t("settings.ambientType")}</label>
               <div className="flex gap-2 flex-wrap">
-                {(["rain", "fire", "whitenoise", "forest", "waves"] as AmbientSoundType[]).map((type) => (
+                {(["thunder", "fire", "whitenoise", "birds", "waves"] as AmbientSoundType[]).map((type) => (
                   <button
                     key={type}
                     onClick={() => onAmbientSettingsChange({ ...ambientSettings, type })}

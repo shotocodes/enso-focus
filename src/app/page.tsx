@@ -43,7 +43,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<TabId>("focus");
   const [timerConfig, setTimerConfig] = useState<TimerConfig>(DEFAULT_TIMER_CONFIG);
   const [ambientSettings, setAmbientSettings] = useState<AmbientSettings>({
-    enabled: false, type: "rain", volume: 0.3,
+    enabled: false, type: "thunder", volume: 0.3,
   });
   const [theme, setThemeState] = useState<ThemeMode>("dark");
   const [locale, setLocaleState] = useState<Locale>("ja");
