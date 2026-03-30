@@ -1,22 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { AmbientSettings, FocusTag, TabId, ThemeMode, TimerConfig, TimerMode, DEFAULT_TIMER_CONFIG } from "@/types";
+import { AmbientSettings, CompletionSoundType, DailyGoal, FocusTag, TabId, ThemeMode, TimerConfig, TimerMode, DEFAULT_TIMER_CONFIG } from "@/types";
 import { Locale, setLocale, t } from "@/lib/i18n";
 import {
-  getTimerConfig,
-  saveTimerConfig,
-  getAmbientSettings,
-  saveAmbientSettings,
-  getActiveTab,
-  saveActiveTab,
-  getTheme,
-  saveTheme,
-  getStoredLocale,
-  saveLocale as saveLocaleStorage,
-  addSession,
+  getTimerConfig, saveTimerConfig, getAmbientSettings, saveAmbientSettings,
+  getCompletionSound, saveCompletionSound, getDailyGoal, saveDailyGoal,
+  getActiveTab, saveActiveTab, getTheme, saveTheme, getStoredLocale,
+  saveLocale as saveLocaleStorage, addSession, getStats,
 } from "@/lib/storage";
-import { playAlert, playCelebration } from "@/lib/sound";
+import { playCompletionSound, playAlert } from "@/lib/sound";
 import BottomTabBar from "@/components/BottomTabBar";
 import FocusTab from "@/components/tabs/FocusTab";
 import HistoryTab from "@/components/tabs/HistoryTab";
@@ -29,12 +22,9 @@ import { useAmbientSound } from "@/hooks/useAmbientSound";
 
 function applyTheme(theme: ThemeMode) {
   if (typeof document === "undefined") return;
-  const resolved =
-    theme === "system"
-      ? window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light"
-      : theme;
+  const resolved = theme === "system"
+    ? window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+    : theme;
   document.documentElement.setAttribute("data-theme", resolved);
 }
 
@@ -42,19 +32,19 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("focus");
   const [timerConfig, setTimerConfig] = useState<TimerConfig>(DEFAULT_TIMER_CONFIG);
-  const [ambientSettings, setAmbientSettings] = useState<AmbientSettings>({
-    enabled: false, type: "thunder", volume: 0.3,
-  });
+  const [ambientSettings, setAmbientSettings] = useState<AmbientSettings>({ enabled: false, type: "thunder", volume: 0.3 });
+  const [completionSound, setCompletionSound] = useState<CompletionSoundType>("celebration");
+  const [dailyGoal, setDailyGoal] = useState<DailyGoal>({ minutes: 0 });
   const [theme, setThemeState] = useState<ThemeMode>("dark");
   const [locale, setLocaleState] = useState<Locale>("ja");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [sessionVersion, setSessionVersion] = useState(0);
-  const [selectedTag, setSelectedTag] = useState<FocusTag | null>(null);
+  const [todaySeconds, setTodaySeconds] = useState(0);
 
-  // Completion modal state
+  // Completion modal
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [pendingSessionData, setPendingSessionData] = useState<{
-    startedAt: string; endedAt: string; duration: number; tag?: FocusTag;
+    startedAt: string; endedAt: string; duration: number;
   } | null>(null);
 
   const sessionStartRef = useRef<string | null>(null);
@@ -62,62 +52,41 @@ export default function Home() {
   const handleTimerComplete = useCallback((mode: TimerMode) => {
     if (mode === "focus" && sessionStartRef.current) {
       const now = new Date().toISOString();
-      const startTime = new Date(sessionStartRef.current).getTime();
-      const duration = Math.round((Date.now() - startTime) / 1000);
-      // Store pending data - wait for memo modal
-      setPendingSessionData({
-        startedAt: sessionStartRef.current,
-        endedAt: now,
-        duration,
-        tag: selectedTag ?? undefined,
-      });
+      const duration = Math.round((Date.now() - new Date(sessionStartRef.current).getTime()) / 1000);
+      setPendingSessionData({ startedAt: sessionStartRef.current, endedAt: now, duration });
       sessionStartRef.current = null;
       setShowCompletionModal(true);
-      playCelebration();
+      playCompletionSound(completionSound);
     } else if (mode === "break") {
       playAlert();
     }
-  }, [selectedTag]);
+  }, [completionSound]);
 
   const timer = useTimer({ config: timerConfig, onComplete: handleTimerComplete });
 
-  // Ambient sound hook
   useAmbientSound({
-    enabled: ambientSettings.enabled,
-    type: ambientSettings.type,
-    volume: ambientSettings.volume,
-    isPlaying: timer.state === "running",
-    mode: timer.mode,
+    enabled: ambientSettings.enabled, type: ambientSettings.type,
+    volume: ambientSettings.volume, isPlaying: timer.state === "running", mode: timer.mode,
   });
 
-  // Track session start
   useEffect(() => {
-    if (timer.state === "running" && timer.mode === "focus" && !sessionStartRef.current) {
+    if (timer.state === "running" && timer.mode === "focus" && !sessionStartRef.current)
       sessionStartRef.current = new Date().toISOString();
-    }
-    if (timer.state === "idle" && timer.mode === "focus") {
+    if (timer.state === "idle" && timer.mode === "focus")
       sessionStartRef.current = null;
-    }
   }, [timer.state, timer.mode]);
 
   useEffect(() => {
     setTimerConfig(getTimerConfig());
     setAmbientSettings(getAmbientSettings());
+    setCompletionSound(getCompletionSound());
+    setDailyGoal(getDailyGoal());
     setActiveTab(getActiveTab());
-
-    const storedTheme = getTheme();
-    setThemeState(storedTheme);
-    applyTheme(storedTheme);
-
-    const storedLocale = getStoredLocale();
-    setLocaleState(storedLocale);
-    setLocale(storedLocale);
-
+    setTodaySeconds(getStats().today);
+    const storedTheme = getTheme(); setThemeState(storedTheme); applyTheme(storedTheme);
+    const storedLocale = getStoredLocale(); setLocaleState(storedLocale); setLocale(storedLocale);
     setMounted(true);
-
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js");
-    }
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");
   }, []);
 
   useEffect(() => {
@@ -128,10 +97,12 @@ export default function Home() {
     return () => mq.removeEventListener("change", handler);
   }, [theme]);
 
-  // Completion modal handlers
-  const handleMemoSave = useCallback((memo: string) => {
+  // Refresh today's seconds when sessionVersion changes
+  useEffect(() => { setTodaySeconds(getStats().today); }, [sessionVersion]);
+
+  const handleMemoSave = useCallback((data: { memo: string; tag?: FocusTag }) => {
     if (pendingSessionData) {
-      addSession({ ...pendingSessionData, memo: memo || undefined });
+      addSession({ ...pendingSessionData, memo: data.memo || undefined, tag: data.tag });
       setSessionVersion((v) => v + 1);
     }
     setPendingSessionData(null);
@@ -139,95 +110,37 @@ export default function Home() {
   }, [pendingSessionData]);
 
   const handleMemoSkip = useCallback(() => {
-    if (pendingSessionData) {
-      addSession(pendingSessionData);
-      setSessionVersion((v) => v + 1);
-    }
+    if (pendingSessionData) { addSession(pendingSessionData); setSessionVersion((v) => v + 1); }
     setPendingSessionData(null);
     setShowCompletionModal(false);
   }, [pendingSessionData]);
 
-  const handleTabChange = useCallback((tab: TabId) => {
-    setActiveTab(tab);
-    saveActiveTab(tab);
-  }, []);
-
-  const handleTimerConfigChange = useCallback((config: TimerConfig) => {
-    setTimerConfig(config);
-    saveTimerConfig(config);
-  }, []);
-
-  const handleAmbientSettingsChange = useCallback((settings: AmbientSettings) => {
-    setAmbientSettings(settings);
-    saveAmbientSettings(settings);
-  }, []);
-
-  const handleThemeChange = useCallback((newTheme: ThemeMode) => {
-    setThemeState(newTheme);
-    saveTheme(newTheme);
-    applyTheme(newTheme);
-  }, []);
-
-  const handleLocaleChange = useCallback((newLocale: Locale) => {
-    setLocale(newLocale);
-    saveLocaleStorage(newLocale);
-    setLocaleState(newLocale);
-  }, []);
-
+  const handleTabChange = useCallback((tab: TabId) => { setActiveTab(tab); saveActiveTab(tab); }, []);
+  const handleTimerConfigChange = useCallback((c: TimerConfig) => { setTimerConfig(c); saveTimerConfig(c); }, []);
+  const handleAmbientSettingsChange = useCallback((s: AmbientSettings) => { setAmbientSettings(s); saveAmbientSettings(s); }, []);
+  const handleCompletionSoundChange = useCallback((s: CompletionSoundType) => { setCompletionSound(s); saveCompletionSound(s); }, []);
+  const handleDailyGoalChange = useCallback((g: DailyGoal) => { setDailyGoal(g); saveDailyGoal(g); }, []);
+  const handleThemeChange = useCallback((t: ThemeMode) => { setThemeState(t); saveTheme(t); applyTheme(t); }, []);
+  const handleLocaleChange = useCallback((l: Locale) => { setLocale(l); saveLocaleStorage(l); setLocaleState(l); }, []);
   const handleAmbientToggle = useCallback(() => {
-    const updated = { ...ambientSettings, enabled: !ambientSettings.enabled };
-    setAmbientSettings(updated);
-    saveAmbientSettings(updated);
+    const u = { ...ambientSettings, enabled: !ambientSettings.enabled };
+    setAmbientSettings(u); saveAmbientSettings(u);
   }, [ambientSettings]);
-
-  const handleTagChange = useCallback((tag: FocusTag | null) => {
-    setSelectedTag(tag);
-  }, []);
-
-  const handleEnterFullscreen = useCallback(() => {
-    setIsFullscreen(true);
-    document.documentElement.requestFullscreen?.().catch(() => {});
-  }, []);
-
-  const handleExitFullscreen = useCallback(() => {
-    setIsFullscreen(false);
-    document.exitFullscreen?.().catch(() => {});
-  }, []);
+  const handleEnterFullscreen = useCallback(() => { setIsFullscreen(true); document.documentElement.requestFullscreen?.().catch(() => {}); }, []);
+  const handleExitFullscreen = useCallback(() => { setIsFullscreen(false); document.exitFullscreen?.().catch(() => {}); }, []);
 
   useEffect(() => {
-    const handler = () => {
-      if (!document.fullscreenElement) {
-        setIsFullscreen(false);
-      }
-    };
+    const handler = () => { if (!document.fullscreenElement) setIsFullscreen(false); };
     document.addEventListener("fullscreenchange", handler);
     return () => document.removeEventListener("fullscreenchange", handler);
   }, []);
 
-  if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-muted text-lg">Loading...</div>
-      </div>
-    );
-  }
+  if (!mounted) return <div className="min-h-screen flex items-center justify-center"><div className="text-muted text-lg">Loading...</div></div>;
 
-  if (isFullscreen) {
-    return (
-      <FullscreenFocus
-        secondsLeft={timer.secondsLeft}
-        totalSeconds={timer.totalSeconds}
-        mode={timer.mode}
-        state={timer.state}
-        onPause={timer.pause}
-        onResume={timer.resume}
-        onReset={timer.reset}
-        onSkip={timer.skip}
-        onExit={handleExitFullscreen}
-        selectedTag={selectedTag}
-      />
-    );
-  }
+  if (isFullscreen) return (
+    <FullscreenFocus secondsLeft={timer.secondsLeft} totalSeconds={timer.totalSeconds} mode={timer.mode} state={timer.state}
+      onPause={timer.pause} onResume={timer.resume} onReset={timer.reset} onSkip={timer.skip} onExit={handleExitFullscreen} />
+  );
 
   return (
     <>
@@ -238,45 +151,25 @@ export default function Home() {
         </div>
 
         {activeTab === "focus" && (
-          <FocusTab
-            key={locale}
-            timer={timer}
-            onEnterFullscreen={handleEnterFullscreen}
-            selectedTag={selectedTag}
-            onTagChange={handleTagChange}
-            ambientEnabled={ambientSettings.enabled}
-            onAmbientToggle={handleAmbientToggle}
-          />
+          <FocusTab key={locale} timer={timer} onEnterFullscreen={handleEnterFullscreen}
+            ambientEnabled={ambientSettings.enabled} onAmbientToggle={handleAmbientToggle}
+            dailyGoal={dailyGoal} todaySeconds={todaySeconds} />
         )}
-        {activeTab === "history" && (
-          <HistoryTab key={`${locale}-${sessionVersion}`} />
-        )}
+        {activeTab === "history" && <HistoryTab key={`${locale}-${sessionVersion}`} />}
         {activeTab === "settings" && (
-          <SettingsTab
-            key={locale}
-            timerConfig={timerConfig}
-            onTimerConfigChange={handleTimerConfigChange}
-            ambientSettings={ambientSettings}
-            onAmbientSettingsChange={handleAmbientSettingsChange}
-            theme={theme}
-            onThemeChange={handleThemeChange}
-            locale={locale}
-            onLocaleChange={handleLocaleChange}
-          />
+          <SettingsTab key={locale} timerConfig={timerConfig} onTimerConfigChange={handleTimerConfigChange}
+            ambientSettings={ambientSettings} onAmbientSettingsChange={handleAmbientSettingsChange}
+            completionSound={completionSound} onCompletionSoundChange={handleCompletionSoundChange}
+            dailyGoal={dailyGoal} onDailyGoalChange={handleDailyGoalChange}
+            theme={theme} onThemeChange={handleThemeChange} locale={locale} onLocaleChange={handleLocaleChange} />
         )}
         {activeTab === "menu" && <MenuTab key={locale} />}
       </main>
 
       <BottomTabBar key={locale} activeTab={activeTab} onTabChange={handleTabChange} />
 
-      {/* Completion modal */}
       {showCompletionModal && pendingSessionData && (
-        <CompletionModal
-          duration={pendingSessionData.duration}
-          tag={pendingSessionData.tag}
-          onSave={handleMemoSave}
-          onSkip={handleMemoSkip}
-        />
+        <CompletionModal duration={pendingSessionData.duration} onSave={handleMemoSave} onSkip={handleMemoSkip} />
       )}
     </>
   );

@@ -71,10 +71,24 @@ const translations: Record<string, Record<Locale, string>> = {
   "theme.light": { ja: "ライト", en: "Light", zh: "浅色", ko: "라이트" },
   "theme.system": { ja: "システム", en: "System", zh: "系统", ko: "시스템" },
 
-  // Sound types
-  "sound.classic": { ja: "クラシック", en: "Classic", zh: "经典", ko: "클래식" },
-  "sound.soft": { ja: "ソフト", en: "Soft", zh: "柔和", ko: "소프트" },
-  "sound.digital": { ja: "デジタル", en: "Digital", zh: "数字", ko: "디지털" },
+  // Completion sound types
+  "settings.completionSound": { ja: "完了音", en: "Completion Sound", zh: "完成音", ko: "완료 소리" },
+  "sound.celebration": { ja: "セレブレーション", en: "Celebration", zh: "庆祝", ko: "축하" },
+  "sound.chime": { ja: "チャイム", en: "Chime", zh: "铃声", ko: "차임" },
+  "sound.gentle": { ja: "やさしい", en: "Gentle", zh: "轻柔", ko: "부드러운" },
+  "sound.none": { ja: "なし", en: "None", zh: "无", ko: "없음" },
+
+  // Daily goal
+  "settings.dailyGoal": { ja: "1日の目標", en: "Daily Goal", zh: "每日目标", ko: "일일 목표" },
+  "settings.goalOff": { ja: "なし", en: "Off", zh: "关闭", ko: "없음" },
+  "goal.progress": { ja: "今日の目標", en: "Today's Goal", zh: "今日目标", ko: "오늘의 목표" },
+  "goal.achieved": { ja: "達成！", en: "Achieved!", zh: "达成！", ko: "달성!" },
+
+  // History enriched
+  "history.streak": { ja: "連続日数", en: "Streak", zh: "连续天数", ko: "연속 일수" },
+  "history.streakDays": { ja: "日連続", en: "days", zh: "天连续", ko: "일 연속" },
+  "history.weeklyAvg": { ja: "週間平均", en: "Weekly Avg", zh: "周均", ko: "주간 평균" },
+  "history.perDay": { ja: "/日", en: "/day", zh: "/天", ko: "/일" },
 
   // Menu
   "menu.title": { ja: "メニュー", en: "Menu", zh: "菜单", ko: "메뉴" },

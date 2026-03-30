@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { t } from "@/lib/i18n";
-import { getStats, getDailyStats, getSessions, clearSessions, getTagStats } from "@/lib/storage";
+import { getStats, getDailyStats, getSessions, clearSessions, getTagStats, getStreak } from "@/lib/storage";
 import { FOCUS_TAGS, TAG_COLORS, TAG_I18N_KEYS, FocusSession } from "@/types";
 
 type Period = "7days" | "1month" | "all";
@@ -32,52 +32,30 @@ export default function HistoryTab() {
   const [period, setPeriod] = useState<Period>("7days");
   const stats = getStats();
   const daily = getDailyStats(7);
+  const streak = getStreak();
   const allSessions = getSessions();
   const filteredSessions = filterByPeriod(allSessions, period).slice().reverse();
   const tagStats = getTagStats();
   const maxDaily = Math.max(...daily.map((d) => d.duration), 1);
+
+  // Weekly average
+  const daysWithData = daily.filter((d) => d.duration > 0).length;
+  const weeklyAvg = daysWithData > 0 ? Math.round(stats.week / daysWithData / 60) : 0;
 
   // Donut chart data
   const totalTagDuration = Object.values(tagStats).reduce((a, b) => a + b, 0);
   const donutSegments: { tag: string; color: string; label: string; percent: number }[] = [];
   if (totalTagDuration > 0) {
     for (const tag of FOCUS_TAGS) {
-      if (tagStats[tag]) {
-        donutSegments.push({
-          tag,
-          color: TAG_COLORS[tag],
-          label: t(TAG_I18N_KEYS[tag]),
-          percent: tagStats[tag] / totalTagDuration,
-        });
-      }
+      if (tagStats[tag]) donutSegments.push({ tag, color: TAG_COLORS[tag], label: t(TAG_I18N_KEYS[tag]), percent: tagStats[tag] / totalTagDuration });
     }
-    if (tagStats["none"]) {
-      donutSegments.push({
-        tag: "none",
-        color: "rgba(128,128,128,0.4)",
-        label: t("history.noTag"),
-        percent: tagStats["none"] / totalTagDuration,
-      });
-    }
+    if (tagStats["none"]) donutSegments.push({ tag: "none", color: "rgba(128,128,128,0.4)", label: t("history.noTag"), percent: tagStats["none"] / totalTagDuration });
   }
 
-  const handleClear = () => {
-    if (confirm(t("history.clearConfirm"))) {
-      clearSessions();
-      setVersion((v) => v + 1);
-    }
-  };
+  const handleClear = () => { if (confirm(t("history.clearConfirm"))) { clearSessions(); setVersion((v) => v + 1); } };
+  const dayLabel = (dateStr: string) => { const d = new Date(dateStr); return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getDay()]; };
 
-  const dayLabel = (dateStr: string) => {
-    const d = new Date(dateStr);
-    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    return days[d.getDay()];
-  };
-
-  const donutSize = 120;
-  const donutStroke = 16;
-  const donutRadius = (donutSize - donutStroke) / 2;
-  const donutCircumference = 2 * Math.PI * donutRadius;
+  const donutSize = 120; const donutStroke = 16; const donutRadius = (donutSize - donutStroke) / 2; const donutCircumference = 2 * Math.PI * donutRadius;
 
   return (
     <div className="animate-tab-enter space-y-6" key={version}>
@@ -96,8 +74,24 @@ export default function HistoryTab() {
         ))}
       </div>
 
-      <div className="text-center text-sm text-muted">
-        {stats.totalSessions} {t("history.sessions")}
+      {/* Streak + Weekly avg + Sessions */}
+      <div className="flex items-center justify-center gap-6 text-center">
+        {streak > 0 && (
+          <div>
+            <div className="text-2xl font-bold text-emerald-500">{streak}</div>
+            <div className="text-[10px] text-muted">{t("history.streakDays")}</div>
+          </div>
+        )}
+        {weeklyAvg > 0 && (
+          <div>
+            <div className="text-2xl font-bold">{weeklyAvg}{t("time.minutes")}</div>
+            <div className="text-[10px] text-muted">{t("history.weeklyAvg")}{t("history.perDay")}</div>
+          </div>
+        )}
+        <div>
+          <div className="text-2xl font-bold">{stats.totalSessions}</div>
+          <div className="text-[10px] text-muted">{t("history.sessions")}</div>
+        </div>
       </div>
 
       {/* Category donut chart */}
@@ -106,29 +100,11 @@ export default function HistoryTab() {
           <h3 className="text-sm font-medium mb-4">{t("history.categories")}</h3>
           <div className="flex items-center gap-6">
             <svg width={donutSize} height={donutSize} className="shrink-0 transform -rotate-90">
-              {(() => {
-                let offset = 0;
-                return donutSegments.map((seg) => {
-                  const dash = seg.percent * donutCircumference;
-                  const gap = donutCircumference - dash;
-                  const el = (
-                    <circle
-                      key={seg.tag}
-                      cx={donutSize / 2}
-                      cy={donutSize / 2}
-                      r={donutRadius}
-                      fill="none"
-                      stroke={seg.color}
-                      strokeWidth={donutStroke}
-                      strokeDasharray={`${dash} ${gap}`}
-                      strokeDashoffset={-offset}
-                      strokeLinecap="round"
-                    />
-                  );
-                  offset += dash;
-                  return el;
-                });
-              })()}
+              {(() => { let offset = 0; return donutSegments.map((seg) => {
+                const dash = seg.percent * donutCircumference; const gap = donutCircumference - dash;
+                const el = <circle key={seg.tag} cx={donutSize / 2} cy={donutSize / 2} r={donutRadius} fill="none" stroke={seg.color} strokeWidth={donutStroke} strokeDasharray={`${dash} ${gap}`} strokeDashoffset={-offset} strokeLinecap="round" />;
+                offset += dash; return el;
+              }); })()}
             </svg>
             <div className="flex flex-col gap-2 min-w-0">
               {donutSegments.map((seg) => (
@@ -150,10 +126,8 @@ export default function HistoryTab() {
           {daily.map(({ date, duration }) => (
             <div key={date} className="flex-1 flex flex-col items-center gap-1">
               <div className="w-full flex items-end justify-center" style={{ height: "80px" }}>
-                <div
-                  className="w-full max-w-[32px] rounded-t bg-emerald-500/70 transition-all"
-                  style={{ height: `${Math.max((duration / maxDaily) * 80, duration > 0 ? 4 : 0)}px` }}
-                />
+                <div className="w-full max-w-[32px] rounded-t bg-emerald-500/70 transition-all"
+                  style={{ height: `${Math.max((duration / maxDaily) * 80, duration > 0 ? 4 : 0)}px` }} />
               </div>
               <span className="text-[10px] text-muted">{dayLabel(date)}</span>
             </div>
@@ -161,20 +135,12 @@ export default function HistoryTab() {
         </div>
       </div>
 
-      {/* Session list with period toggle */}
+      {/* Session list */}
       <div className="space-y-3">
-        {/* Period selector */}
         <div className="flex gap-2">
           {(["7days", "1month", "all"] as Period[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                period === p
-                  ? "bg-emerald-500 text-white"
-                  : "bg-subtle text-muted hover:text-white"
-              }`}
-            >
+            <button key={p} onClick={() => setPeriod(p)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${period === p ? "bg-emerald-500 text-white" : "bg-subtle text-muted hover:text-white"}`}>
               {t(`history.period.${p}`)}
             </button>
           ))}
@@ -186,33 +152,20 @@ export default function HistoryTab() {
               <div key={s.id} className="py-2 px-3 bg-card rounded-xl border border-card">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    {s.tag && (
-                      <span
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{ backgroundColor: TAG_COLORS[s.tag] }}
-                      />
-                    )}
+                    {s.tag && <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: TAG_COLORS[s.tag] }} />}
                     <span className="text-sm text-muted">{formatShortDate(s.startedAt)}</span>
                   </div>
                   <span className="text-sm font-medium">{formatDuration(s.duration)}</span>
                 </div>
-                {s.memo && (
-                  <p className="text-xs text-muted mt-1 truncate pl-4">{s.memo}</p>
-                )}
+                {s.memo && <p className="text-xs text-muted mt-1 truncate pl-4">{s.memo}</p>}
               </div>
             ))}
-
-            <button
-              onClick={handleClear}
-              className="w-full text-center text-xs text-red-400/60 hover:text-red-400 py-2 transition-colors"
-            >
+            <button onClick={handleClear} className="w-full text-center text-xs text-red-400/60 hover:text-red-400 py-2 transition-colors">
               {t("history.clearAll")}
             </button>
           </div>
         ) : (
-          <div className="text-center text-muted text-sm py-8">
-            {t("history.noSessions")}
-          </div>
+          <div className="text-center text-muted text-sm py-8">{t("history.noSessions")}</div>
         )}
       </div>
     </div>

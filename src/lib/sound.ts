@@ -1,4 +1,4 @@
-import { TickSoundType } from "@/types";
+import { CompletionSoundType } from "@/types";
 
 let audioCtx: AudioContext | null = null;
 let masterGain: GainNode | null = null;
@@ -29,7 +29,7 @@ export function setVolume(volume: number): void {
   }
 }
 
-export function playTickSound(type: TickSoundType = "classic"): void {
+export function playTickSound(type: string = "classic"): void {
   const ctx = getAudioContext();
   const gain = getMasterGain();
   if (!ctx || !gain) return;
@@ -67,7 +67,7 @@ export function playTickSound(type: TickSoundType = "classic"): void {
   }
 }
 
-export function previewSound(type: TickSoundType): void {
+export function previewSound(type: string): void {
   playTickSound(type);
   setTimeout(() => playTickSound(type), 300);
   setTimeout(() => playTickSound(type), 600);
@@ -94,6 +94,45 @@ export function playCelebration(): void {
     osc.start(start);
     osc.stop(start + 0.3);
   });
+}
+
+export function playChime(): void {
+  const ctx = getAudioContext();
+  const gain = getMasterGain();
+  if (!ctx || !gain) return;
+  const notes = [784, 988, 1175];
+  notes.forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const envGain = ctx.createGain();
+    osc.connect(envGain); envGain.connect(gain);
+    osc.type = "sine"; osc.frequency.value = freq;
+    const start = ctx.currentTime + i * 0.2;
+    envGain.gain.setValueAtTime(0.1, start);
+    envGain.gain.exponentialRampToValueAtTime(0.001, start + 0.5);
+    osc.start(start); osc.stop(start + 0.5);
+  });
+}
+
+export function playGentle(): void {
+  const ctx = getAudioContext();
+  const gain = getMasterGain();
+  if (!ctx || !gain) return;
+  const osc = ctx.createOscillator();
+  const envGain = ctx.createGain();
+  osc.connect(envGain); envGain.connect(gain);
+  osc.type = "sine"; osc.frequency.value = 440;
+  envGain.gain.setValueAtTime(0.08, ctx.currentTime);
+  envGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
+  osc.start(); osc.stop(ctx.currentTime + 1.5);
+}
+
+export function playCompletionSound(type: CompletionSoundType): void {
+  switch (type) {
+    case "celebration": playCelebration(); break;
+    case "chime": playChime(); break;
+    case "gentle": playGentle(); break;
+    case "none": break;
+  }
 }
 
 export function playAlert(): void {
