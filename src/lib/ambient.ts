@@ -1,8 +1,8 @@
 import { AmbientSoundType } from "@/types";
-import { getFreesoundUrl, isFreesoundAvailable } from "./freesound";
+import { startYouTubeAmbient, stopYouTubeAmbient, setYouTubeVolume, isYouTubeAvailable } from "./youtube";
 
 let ctx: AudioContext | null = null;
-let freesoundAudio: HTMLAudioElement | null = null;
+let usingYouTube = false;
 let masterGain: GainNode | null = null;
 let activeNodes: AudioNode[] = [];
 let activeIntervals: ReturnType<typeof setInterval>[] = [];
@@ -241,13 +241,6 @@ function startBreakSound(audioCtx: AudioContext, gain: GainNode) {
   activeIntervals.push(iv);
 }
 
-function startFreesoundPlayback(url: string, volume: number) {
-  freesoundAudio = new Audio(url);
-  freesoundAudio.loop = true;
-  freesoundAudio.volume = Math.max(0, Math.min(1, volume));
-  freesoundAudio.play().catch(() => {});
-}
-
 function startGeneratedFallback(type: AmbientSoundType | "break", volume: number) {
   const audioCtx = getCtx();
   if (!audioCtx || !masterGain) return;
@@ -266,18 +259,18 @@ function startGeneratedFallback(type: AmbientSoundType | "break", volume: number
 export async function startAmbient(type: AmbientSoundType | "break", volume: number): Promise<void> {
   stopAmbient();
 
-  // Break sound is always generated
+  // Break sound is always generated (short, no need for YouTube)
   if (type === "break") {
     startGeneratedFallback(type, volume);
     return;
   }
 
-  // Try freesound API first
-  if (isFreesoundAvailable()) {
+  // Try YouTube first (online only)
+  if (isYouTubeAvailable()) {
     try {
-      const url = await getFreesoundUrl(type);
-      if (url) {
-        startFreesoundPlayback(url, volume);
+      const success = await startYouTubeAmbient(type, volume);
+      if (success) {
+        usingYouTube = true;
         return;
       }
     } catch {
@@ -285,16 +278,16 @@ export async function startAmbient(type: AmbientSoundType | "break", volume: num
     }
   }
 
-  // Fallback to Web Audio generated sounds
+  // Fallback to Web Audio generated sounds (offline)
+  usingYouTube = false;
   startGeneratedFallback(type, volume);
 }
 
 export function stopAmbient(): void {
-  // Stop freesound HTML audio
-  if (freesoundAudio) {
-    freesoundAudio.pause();
-    freesoundAudio.src = "";
-    freesoundAudio = null;
+  // Stop YouTube player
+  if (usingYouTube) {
+    stopYouTubeAmbient();
+    usingYouTube = false;
   }
   // Stop Web Audio nodes
   for (const iv of activeIntervals) clearInterval(iv);
@@ -312,8 +305,8 @@ export function stopAmbient(): void {
 
 export function setAmbientVolume(volume: number): void {
   const v = Math.max(0, Math.min(1, volume));
-  if (freesoundAudio) {
-    freesoundAudio.volume = v;
+  if (usingYouTube) {
+    setYouTubeVolume(v);
   }
   if (masterGain) {
     masterGain.gain.value = v;
