@@ -256,40 +256,39 @@ function startGeneratedFallback(type: AmbientSoundType | "break", volume: number
   }
 }
 
+// Track current request to avoid race conditions
+let currentRequestId = 0;
+
 export async function startAmbient(type: AmbientSoundType | "break", volume: number): Promise<void> {
   stopAmbient();
+  const requestId = ++currentRequestId;
 
-  // Break sound is always generated (short, no need for YouTube)
+  // Break sound is always generated
   if (type === "break") {
     startGeneratedFallback(type, volume);
     return;
   }
 
-  // Try YouTube first (online only)
+  // Step 1: Immediately play Web Audio generated sound (instant feedback)
+  startGeneratedFallback(type, volume);
+
+  // Step 2: Load YouTube in background, swap when ready
   if (isYouTubeAvailable()) {
     try {
       const success = await startYouTubeAmbient(type, volume);
-      if (success) {
+      // Check if still the same request (user didn't switch again)
+      if (success && currentRequestId === requestId) {
+        // YouTube ready — stop Web Audio, use YouTube
+        stopWebAudioNodes();
         usingYouTube = true;
-        return;
       }
     } catch {
-      // Fall through to generated sound
+      // Keep using Web Audio — already playing
     }
   }
-
-  // Fallback to Web Audio generated sounds (offline)
-  usingYouTube = false;
-  startGeneratedFallback(type, volume);
 }
 
-export function stopAmbient(): void {
-  // Stop YouTube player
-  if (usingYouTube) {
-    stopYouTubeAmbient();
-    usingYouTube = false;
-  }
-  // Stop Web Audio nodes
+function stopWebAudioNodes(): void {
   for (const iv of activeIntervals) clearInterval(iv);
   activeIntervals = [];
   for (const node of activeNodes) {
@@ -301,6 +300,17 @@ export function stopAmbient(): void {
     } catch { /* already stopped */ }
   }
   activeNodes = [];
+}
+
+export function stopAmbient(): void {
+  currentRequestId++;
+  // Stop YouTube
+  if (usingYouTube) {
+    stopYouTubeAmbient();
+    usingYouTube = false;
+  }
+  // Stop Web Audio
+  stopWebAudioNodes();
 }
 
 export function setAmbientVolume(volume: number): void {
