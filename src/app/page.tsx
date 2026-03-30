@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { AmbientSettings, CompletionSoundType, DailyGoal, FocusTag, TabId, ThemeMode, TimerConfig, TimerMode, DEFAULT_TIMER_CONFIG } from "@/types";
+import { AmbientSettings, CompletionSoundType, CustomTag, DailyGoal, DEFAULT_TAGS, TabId, ThemeMode, TimerConfig, TimerMode, DEFAULT_TIMER_CONFIG } from "@/types";
 import { Locale, setLocale, t } from "@/lib/i18n";
 import {
   getTimerConfig, saveTimerConfig, getAmbientSettings, saveAmbientSettings,
-  getCompletionSound, saveCompletionSound, getDailyGoal, saveDailyGoal,
+  getCompletionSound, saveCompletionSound, getDailyGoal, saveDailyGoal, getTags, saveTags,
   getActiveTab, saveActiveTab, getTheme, saveTheme, getStoredLocale,
   saveLocale as saveLocaleStorage, addSession, getStats,
 } from "@/lib/storage";
@@ -35,6 +35,7 @@ export default function Home() {
   const [ambientSettings, setAmbientSettings] = useState<AmbientSettings>({ enabled: false, type: "thunder", volume: 0.3 });
   const [completionSound, setCompletionSound] = useState<CompletionSoundType>("celebration");
   const [dailyGoal, setDailyGoal] = useState<DailyGoal>({ minutes: 0 });
+  const [tags, setTags] = useState<CustomTag[]>(DEFAULT_TAGS);
   const [theme, setThemeState] = useState<ThemeMode>("dark");
   const [locale, setLocaleState] = useState<Locale>("ja");
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -81,6 +82,7 @@ export default function Home() {
     setAmbientSettings(getAmbientSettings());
     setCompletionSound(getCompletionSound());
     setDailyGoal(getDailyGoal());
+    setTags(getTags());
     setActiveTab(getActiveTab());
     setTodaySeconds(getStats().today);
     const storedTheme = getTheme(); setThemeState(storedTheme); applyTheme(storedTheme);
@@ -100,7 +102,7 @@ export default function Home() {
   // Refresh today's seconds when sessionVersion changes
   useEffect(() => { setTodaySeconds(getStats().today); }, [sessionVersion]);
 
-  const handleMemoSave = useCallback((data: { memo: string; tag?: FocusTag }) => {
+  const handleMemoSave = useCallback((data: { memo: string; tag?: string }) => {
     if (pendingSessionData) {
       addSession({ ...pendingSessionData, memo: data.memo || undefined, tag: data.tag });
       setSessionVersion((v) => v + 1);
@@ -120,6 +122,7 @@ export default function Home() {
   const handleAmbientSettingsChange = useCallback((s: AmbientSettings) => { setAmbientSettings(s); saveAmbientSettings(s); }, []);
   const handleCompletionSoundChange = useCallback((s: CompletionSoundType) => { setCompletionSound(s); saveCompletionSound(s); }, []);
   const handleDailyGoalChange = useCallback((g: DailyGoal) => { setDailyGoal(g); saveDailyGoal(g); }, []);
+  const handleTagsChange = useCallback((t: CustomTag[]) => { setTags(t); saveTags(t); }, []);
   const handleThemeChange = useCallback((t: ThemeMode) => { setThemeState(t); saveTheme(t); applyTheme(t); }, []);
   const handleLocaleChange = useCallback((l: Locale) => { setLocale(l); saveLocaleStorage(l); setLocaleState(l); }, []);
   const handleAmbientToggle = useCallback(() => {
@@ -161,6 +164,7 @@ export default function Home() {
             ambientSettings={ambientSettings} onAmbientSettingsChange={handleAmbientSettingsChange}
             completionSound={completionSound} onCompletionSoundChange={handleCompletionSoundChange}
             dailyGoal={dailyGoal} onDailyGoalChange={handleDailyGoalChange}
+            tags={tags} onTagsChange={handleTagsChange}
             theme={theme} onThemeChange={handleThemeChange} locale={locale} onLocaleChange={handleLocaleChange} />
         )}
         {activeTab === "menu" && <MenuTab key={locale} />}
@@ -169,7 +173,7 @@ export default function Home() {
       <BottomTabBar key={locale} activeTab={activeTab} onTabChange={handleTabChange} />
 
       {showCompletionModal && pendingSessionData && (
-        <CompletionModal duration={pendingSessionData.duration} onSave={handleMemoSave} onSkip={handleMemoSkip} />
+        <CompletionModal duration={pendingSessionData.duration} tags={tags} onSave={handleMemoSave} onSkip={handleMemoSkip} />
       )}
     </>
   );

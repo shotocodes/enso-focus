@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { t } from "@/lib/i18n";
-import { getStats, getDailyStats, getSessions, clearSessions, getTagStats, getStreak } from "@/lib/storage";
-import { FOCUS_TAGS, TAG_COLORS, TAG_I18N_KEYS, FocusSession } from "@/types";
+import { getStats, getDailyStats, getSessions, clearSessions, getTagStats, getStreak, getTags } from "@/lib/storage";
+import { FocusSession } from "@/types";
 
 type Period = "7days" | "1month" | "all";
 
@@ -36,6 +36,8 @@ export default function HistoryTab() {
   const allSessions = getSessions();
   const filteredSessions = filterByPeriod(allSessions, period).slice().reverse();
   const tagStats = getTagStats();
+  const tags = getTags();
+  const tagMap = new Map(tags.map((t) => [t.id, t]));
   const maxDaily = Math.max(...daily.map((d) => d.duration), 1);
 
   // Weekly average
@@ -46,8 +48,15 @@ export default function HistoryTab() {
   const totalTagDuration = Object.values(tagStats).reduce((a, b) => a + b, 0);
   const donutSegments: { tag: string; color: string; label: string; percent: number }[] = [];
   if (totalTagDuration > 0) {
-    for (const tag of FOCUS_TAGS) {
-      if (tagStats[tag]) donutSegments.push({ tag, color: TAG_COLORS[tag], label: t(TAG_I18N_KEYS[tag]), percent: tagStats[tag] / totalTagDuration });
+    for (const [tagId, duration] of Object.entries(tagStats)) {
+      if (tagId === "none") continue;
+      const tagDef = tagMap.get(tagId);
+      donutSegments.push({
+        tag: tagId,
+        color: tagDef?.color || "#6b7280",
+        label: tagDef?.name || tagId,
+        percent: duration / totalTagDuration,
+      });
     }
     if (tagStats["none"]) donutSegments.push({ tag: "none", color: "rgba(128,128,128,0.4)", label: t("history.noTag"), percent: tagStats["none"] / totalTagDuration });
   }
@@ -152,7 +161,7 @@ export default function HistoryTab() {
               <div key={s.id} className="py-2 px-3 bg-card rounded-xl border border-card">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    {s.tag && <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: TAG_COLORS[s.tag] }} />}
+                    {s.tag && <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: tagMap.get(s.tag)?.color || "#6b7280" }} />}
                     <span className="text-sm text-muted">{formatShortDate(s.startedAt)}</span>
                   </div>
                   <span className="text-sm font-medium">{formatDuration(s.duration)}</span>

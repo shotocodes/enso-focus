@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import { t } from "@/lib/i18n";
-import { FocusTag, FOCUS_TAGS, TAG_COLORS, TAG_I18N_KEYS } from "@/types";
+import { CustomTag } from "@/types";
 import { CheckCircleIcon } from "./Icons";
 
 interface Props {
   duration: number;
-  onSave: (data: { memo: string; tag?: FocusTag }) => void;
+  tags: CustomTag[];
+  onSave: (data: { memo: string; tag?: string }) => void;
   onSkip: () => void;
 }
 
@@ -18,13 +19,12 @@ function formatDuration(seconds: number): string {
   return `${m}${t("time.minutes")}`;
 }
 
-export default function CompletionModal({ duration, onSave, onSkip }: Props) {
+export default function CompletionModal({ duration, tags, onSave, onSkip }: Props) {
   const [memo, setMemo] = useState("");
-  const [selectedTag, setSelectedTag] = useState<FocusTag | null>(null);
+  const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setTimeout(() => inputRef.current?.focus(), 300); }, []);
-
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onSkip(); };
     window.addEventListener("keydown", handler);
@@ -32,7 +32,7 @@ export default function CompletionModal({ duration, onSave, onSkip }: Props) {
   }, [onSkip]);
 
   const handleSave = () => {
-    onSave({ memo: memo.trim(), tag: selectedTag ?? undefined });
+    onSave({ memo: memo.trim(), tag: selectedTagId ?? undefined });
   };
 
   return (
@@ -49,20 +49,22 @@ export default function CompletionModal({ duration, onSave, onSkip }: Props) {
         <p className="text-sm text-muted text-center mb-5">{formatDuration(duration)}</p>
 
         {/* Category tags */}
-        <div className="flex gap-2 flex-wrap justify-center mb-4">
-          {FOCUS_TAGS.map((tag) => {
-            const active = selectedTag === tag;
-            return (
-              <button key={tag}
-                onClick={() => setSelectedTag(active ? null : tag)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-                style={active ? { backgroundColor: TAG_COLORS[tag], color: "#fff" } : undefined}>
-                {!active && <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: TAG_COLORS[tag] }} />}
-                <span className={active ? "" : "text-muted"}>{t(TAG_I18N_KEYS[tag])}</span>
-              </button>
-            );
-          })}
-        </div>
+        {tags.length > 0 && (
+          <div className="flex gap-2 flex-wrap justify-center mb-4">
+            {tags.map((tag) => {
+              const active = selectedTagId === tag.id;
+              return (
+                <button key={tag.id}
+                  onClick={() => setSelectedTagId(active ? null : tag.id)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+                  style={active ? { backgroundColor: tag.color, color: "#fff" } : undefined}>
+                  {!active && <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />}
+                  <span className={active ? "" : "text-muted"}>{tag.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Memo input */}
         <input ref={inputRef} type="text" value={memo}

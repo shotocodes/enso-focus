@@ -17,26 +17,21 @@ export const DEFAULT_TIMER_CONFIG: TimerConfig = {
   autoStartBreak: true,
 };
 
-// Focus tags (selected at completion)
-export type FocusTag = "work" | "study" | "creative" | "exercise" | "reading";
+// Custom tags
+export interface CustomTag {
+  id: string;
+  name: string;
+  color: string;
+}
 
-export const FOCUS_TAGS: FocusTag[] = ["work", "study", "creative", "exercise", "reading"];
+export const PALETTE = ["#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444", "#10b981", "#ec4899", "#06b6d4", "#f97316"];
 
-export const TAG_COLORS: Record<FocusTag, string> = {
-  work: "#3b82f6",
-  study: "#8b5cf6",
-  creative: "#f59e0b",
-  exercise: "#ef4444",
-  reading: "#10b981",
-};
-
-export const TAG_I18N_KEYS: Record<FocusTag, string> = {
-  work: "tag.work",
-  study: "tag.study",
-  creative: "tag.creative",
-  exercise: "tag.exercise",
-  reading: "tag.reading",
-};
+export const DEFAULT_TAGS: CustomTag[] = [
+  { id: "work", name: "仕事", color: "#3b82f6" },
+  { id: "study", name: "勉強", color: "#8b5cf6" },
+  { id: "creative", name: "創作", color: "#f59e0b" },
+  { id: "exercise", name: "運動", color: "#ef4444" },
+];
 
 // Focus session record
 export interface FocusSession {
@@ -44,7 +39,7 @@ export interface FocusSession {
   startedAt: string;
   endedAt: string;
   duration: number;
-  tag?: FocusTag;
+  tag?: string;   // tag id
   memo?: string;
 }
 
@@ -77,7 +72,7 @@ export interface AmbientSettings {
 
 // Daily goal
 export interface DailyGoal {
-  minutes: number; // target minutes per day, 0 = disabled
+  minutes: number;
 }
 
 // Theme

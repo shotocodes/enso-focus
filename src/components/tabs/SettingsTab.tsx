@@ -3,7 +3,7 @@
 import { t } from "@/lib/i18n";
 import { Locale } from "@/lib/i18n";
 import { playCompletionSound } from "@/lib/sound";
-import { AmbientSettings, AmbientSoundType, AMBIENT_SOUND_I18N_KEYS, CompletionSoundType, COMPLETION_SOUND_I18N_KEYS, DailyGoal, ThemeMode, TimerConfig } from "@/types";
+import { AmbientSettings, AmbientSoundType, AMBIENT_SOUND_I18N_KEYS, CompletionSoundType, COMPLETION_SOUND_I18N_KEYS, CustomTag, DailyGoal, PALETTE, ThemeMode, TimerConfig } from "@/types";
 import { SpeakerOnIcon, SpeakerOffIcon } from "../Icons";
 
 interface Props {
@@ -15,6 +15,8 @@ interface Props {
   onCompletionSoundChange: (s: CompletionSoundType) => void;
   dailyGoal: DailyGoal;
   onDailyGoalChange: (g: DailyGoal) => void;
+  tags: CustomTag[];
+  onTagsChange: (tags: CustomTag[]) => void;
   theme: ThemeMode;
   onThemeChange: (theme: ThemeMode) => void;
   locale: Locale;
@@ -30,6 +32,7 @@ export default function SettingsTab({
   ambientSettings, onAmbientSettingsChange,
   completionSound, onCompletionSoundChange,
   dailyGoal, onDailyGoalChange,
+  tags, onTagsChange,
   theme, onThemeChange, locale, onLocaleChange,
 }: Props) {
   return (
@@ -79,6 +82,64 @@ export default function SettingsTab({
             </button>
           ))}
         </div>
+      </section>
+
+      {/* Categories */}
+      <section className="bg-card rounded-2xl p-4 border border-card space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium">{t("settings.categories")}</h3>
+          <span className="text-[10px] text-muted">{t("tag.max")}</span>
+        </div>
+        <div className="space-y-2">
+          {tags.map((tag, idx) => (
+            <div key={tag.id} className="flex items-center gap-2">
+              {/* Color picker */}
+              <div className="relative">
+                <button className="w-7 h-7 rounded-full border-2 border-card shrink-0" style={{ backgroundColor: tag.color }} />
+                <select
+                  value={tag.color}
+                  onChange={(e) => {
+                    const updated = [...tags];
+                    updated[idx] = { ...tag, color: e.target.value };
+                    onTagsChange(updated);
+                  }}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                >
+                  {PALETTE.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              {/* Name */}
+              <input
+                type="text"
+                value={tag.name}
+                onChange={(e) => {
+                  const updated = [...tags];
+                  updated[idx] = { ...tag, name: e.target.value };
+                  onTagsChange(updated);
+                }}
+                className="flex-1 bg-input border border-input rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-emerald-500"
+                maxLength={12}
+              />
+              {/* Delete */}
+              <button
+                onClick={() => onTagsChange(tags.filter((_, i) => i !== idx))}
+                className="text-muted hover:text-red-400 transition-colors text-lg px-1"
+              >×</button>
+            </div>
+          ))}
+        </div>
+        {tags.length < 4 && (
+          <button
+            onClick={() => {
+              const usedColors = new Set(tags.map((t) => t.color));
+              const nextColor = PALETTE.find((c) => !usedColors.has(c)) || PALETTE[0];
+              onTagsChange([...tags, { id: crypto.randomUUID(), name: "", color: nextColor }]);
+            }}
+            className="w-full py-2 rounded-xl border border-dashed border-card text-sm text-muted hover:text-white transition-colors"
+          >
+            + {t("tag.add")}
+          </button>
+        )}
       </section>
 
       {/* Completion Sound */}

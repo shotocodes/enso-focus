@@ -1,4 +1,4 @@
-import { AmbientSettings, CompletionSoundType, DailyGoal, FocusSession, TabId, ThemeMode, TimerConfig, DEFAULT_TIMER_CONFIG } from "@/types";
+import { AmbientSettings, CompletionSoundType, CustomTag, DailyGoal, DEFAULT_TAGS, FocusSession, TabId, ThemeMode, TimerConfig, DEFAULT_TIMER_CONFIG } from "@/types";
 import { Locale } from "./i18n";
 
 const PREFIX = "enso-focus-";
@@ -96,6 +96,10 @@ export function getTagStats(): Record<string, number> {
   for (const s of sessions) { const key = s.tag || "none"; result[key] = (result[key] || 0) + s.duration; }
   return result;
 }
+
+// Custom tags
+export function getTags(): CustomTag[] { return get("tags", DEFAULT_TAGS); }
+export function saveTags(tags: CustomTag[]): void { set("tags", tags); }
 
 // Completion sound
 export function getCompletionSound(): CompletionSoundType { return get("completion-sound", "celebration" as CompletionSoundType); }

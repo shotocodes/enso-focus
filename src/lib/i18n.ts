@@ -102,6 +102,11 @@ const translations: Record<string, Record<Locale, string>> = {
   "tag.creative": { ja: "創作", en: "Creative", zh: "创作", ko: "창작" },
   "tag.exercise": { ja: "運動", en: "Exercise", zh: "运动", ko: "운동" },
   "tag.reading": { ja: "読書", en: "Reading", zh: "阅读", ko: "독서" },
+  "tag.edit": { ja: "カテゴリを編集", en: "Edit Categories", zh: "编辑分类", ko: "카테고리 편집" },
+  "tag.add": { ja: "追加", en: "Add", zh: "添加", ko: "추가" },
+  "tag.namePlaceholder": { ja: "カテゴリ名", en: "Category name", zh: "分类名", ko: "카테고리명" },
+  "tag.max": { ja: "最大4つまで", en: "Max 4 tags", zh: "最多4个", ko: "최대 4개" },
+  "settings.categories": { ja: "カテゴリ", en: "Categories", zh: "分类", ko: "카테고리" },
   "history.categories": { ja: "カテゴリ別", en: "By Category", zh: "按分类", ko: "카테고리별" },
   "history.noTag": { ja: "未分類", en: "Uncategorized", zh: "未分类", ko: "미분류" },
 
