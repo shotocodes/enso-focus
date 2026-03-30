@@ -224,6 +224,7 @@ export default function Home() {
         onReset={timer.reset}
         onSkip={timer.skip}
         onExit={handleExitFullscreen}
+        selectedTag={selectedTag}
       />
     );
   }

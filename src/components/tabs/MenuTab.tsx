@@ -80,6 +80,21 @@ export default function MenuTab() {
             <span className="text-[10px] text-muted block mt-0.5">{t("menu.comingSoon")}</span>
           </div>
         </div>
+
+        {/* ENSO COMMUNITY - Coming Soon */}
+        <div className="flex items-center gap-3 p-3 -mx-1 rounded-xl opacity-40">
+          <svg width={36} height={36} viewBox="0 0 100 100" fill="none" className="text-emerald-500 shrink-0">
+            <circle cx="50" cy="50" r="32" stroke="currentColor" strokeWidth="5" fill="none" opacity="0.9" />
+            <circle cx="38" cy="45" r="6" stroke="currentColor" strokeWidth="3" fill="none" />
+            <circle cx="62" cy="45" r="6" stroke="currentColor" strokeWidth="3" fill="none" />
+            <path d="M35 62 Q50 72 65 62" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+          </svg>
+          <div className="min-w-0">
+            <span className="text-sm font-medium block">{t("menu.ensoCommunity")}</span>
+            <span className="text-xs text-muted block">{t("menu.ensoCommunityDesc")}</span>
+            <span className="text-[10px] text-muted block mt-0.5">{t("menu.comingSoon")}</span>
+          </div>
+        </div>
       </div>
 
       {/* Credits */}

@@ -1,6 +1,8 @@
 import { AmbientSoundType } from "@/types";
+import { getFreesoundUrl, isFreesoundAvailable } from "./freesound";
 
 let ctx: AudioContext | null = null;
+let freesoundAudio: HTMLAudioElement | null = null;
 let masterGain: GainNode | null = null;
 let activeNodes: AudioNode[] = [];
 let activeIntervals: ReturnType<typeof setInterval>[] = [];
@@ -210,8 +212,14 @@ function startBreakSound(audioCtx: AudioContext, gain: GainNode) {
   activeIntervals.push(iv);
 }
 
-export function startAmbient(type: AmbientSoundType | "break", volume: number): void {
-  stopAmbient();
+function startFreesoundPlayback(url: string, volume: number) {
+  freesoundAudio = new Audio(url);
+  freesoundAudio.loop = true;
+  freesoundAudio.volume = Math.max(0, Math.min(1, volume));
+  freesoundAudio.play().catch(() => {});
+}
+
+function startGeneratedFallback(type: AmbientSoundType | "break", volume: number) {
   const audioCtx = getCtx();
   if (!audioCtx || !masterGain) return;
   masterGain.gain.value = Math.max(0, Math.min(1, volume));
@@ -226,7 +234,40 @@ export function startAmbient(type: AmbientSoundType | "break", volume: number): 
   }
 }
 
+export async function startAmbient(type: AmbientSoundType | "break", volume: number): Promise<void> {
+  stopAmbient();
+
+  // Break sound is always generated
+  if (type === "break") {
+    startGeneratedFallback(type, volume);
+    return;
+  }
+
+  // Try freesound API first
+  if (isFreesoundAvailable()) {
+    try {
+      const url = await getFreesoundUrl(type);
+      if (url) {
+        startFreesoundPlayback(url, volume);
+        return;
+      }
+    } catch {
+      // Fall through to generated sound
+    }
+  }
+
+  // Fallback to Web Audio generated sounds
+  startGeneratedFallback(type, volume);
+}
+
 export function stopAmbient(): void {
+  // Stop freesound HTML audio
+  if (freesoundAudio) {
+    freesoundAudio.pause();
+    freesoundAudio.src = "";
+    freesoundAudio = null;
+  }
+  // Stop Web Audio nodes
   for (const iv of activeIntervals) clearInterval(iv);
   activeIntervals = [];
   for (const node of activeNodes) {
@@ -241,7 +282,11 @@ export function stopAmbient(): void {
 }
 
 export function setAmbientVolume(volume: number): void {
+  const v = Math.max(0, Math.min(1, volume));
+  if (freesoundAudio) {
+    freesoundAudio.volume = v;
+  }
   if (masterGain) {
-    masterGain.gain.value = Math.max(0, Math.min(1, volume));
+    masterGain.gain.value = v;
   }
 }

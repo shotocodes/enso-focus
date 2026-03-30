@@ -1,7 +1,7 @@
 "use client";
 
 import { t } from "@/lib/i18n";
-import { TimerMode, TimerState, FocusTag, FOCUS_TAGS, TAG_COLORS, TAG_I18N_KEYS, AmbientSettings } from "@/types";
+import { TimerMode, TimerState, FocusTag, FOCUS_TAGS, TAG_COLORS, TAG_I18N_KEYS } from "@/types";
 import { PlayIcon, PauseIcon, SkipIcon, ExpandIcon, SpeakerOnIcon, SpeakerOffIcon } from "../Icons";
 
 interface TimerHandle {
@@ -36,6 +36,11 @@ export default function FocusTab({ timer, onEnterFullscreen, selectedTag, onTagC
   const progress = totalSeconds > 0 ? (totalSeconds - secondsLeft) / totalSeconds : 0;
   const isFocus = mode === "focus";
 
+  // Ring color: tag color when focus + tag selected, otherwise emerald/amber
+  const ringColor = isFocus && selectedTag ? TAG_COLORS[selectedTag] : undefined;
+  const accentClass = isFocus ? "text-emerald-500" : "text-amber-500";
+  const btnBgClass = isFocus ? "bg-emerald-500 hover:bg-emerald-600" : "bg-amber-500 hover:bg-amber-600";
+
   const size = 280;
   const strokeWidth = 6;
   const radius = (size - strokeWidth) / 2;
@@ -45,15 +50,33 @@ export default function FocusTab({ timer, onEnterFullscreen, selectedTag, onTagC
   return (
     <div className="animate-tab-enter flex flex-col items-center">
       {/* Mode label */}
-      <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium mb-4 ${
-        isFocus
-          ? "bg-emerald-500/10 text-emerald-500"
-          : "bg-amber-500/10 text-amber-500"
-      }`}>
-        <span className={`w-2 h-2 rounded-full ${isFocus ? "bg-emerald-500" : "bg-amber-500"} ${
-          state === "running" ? "animate-timer-pulse" : ""
-        }`} />
-        {t(isFocus ? "focus.mode.focus" : "focus.mode.break")}
+      <div
+        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium mb-4"
+        style={isFocus && selectedTag ? {
+          backgroundColor: TAG_COLORS[selectedTag] + "18",
+          color: TAG_COLORS[selectedTag],
+        } : undefined}
+      >
+        {!(isFocus && selectedTag) && (
+          <span className={`inline-flex items-center gap-2 ${
+            isFocus ? "text-emerald-500" : "text-amber-500"
+          }`} />
+        )}
+        <span
+          className={`w-2 h-2 rounded-full ${state === "running" ? "animate-timer-pulse" : ""}`}
+          style={isFocus && selectedTag
+            ? { backgroundColor: TAG_COLORS[selectedTag] }
+            : undefined
+          }
+        />
+        {/* Show tag name when running, mode name otherwise */}
+        {state !== "idle" && isFocus && selectedTag ? (
+          <span>{t(TAG_I18N_KEYS[selectedTag])}</span>
+        ) : (
+          <span className={!(isFocus && selectedTag) ? (isFocus ? "text-emerald-500" : "text-amber-500") : ""}>
+            {t(isFocus ? "focus.mode.focus" : "focus.mode.break")}
+          </span>
+        )}
       </div>
 
       {/* Tag selector - show when idle and focus mode */}
@@ -101,14 +124,12 @@ export default function FocusTab({ timer, onEnterFullscreen, selectedTag, onTagC
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="currentColor"
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={dashOffset}
-            className={`transition-all duration-1000 ease-linear ${
-              isFocus ? "text-emerald-500" : "text-amber-500"
-            }`}
+            className={`transition-all duration-1000 ease-linear ${ringColor ? "" : accentClass}`}
+            style={ringColor ? { stroke: ringColor } : undefined}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -126,13 +147,16 @@ export default function FocusTab({ timer, onEnterFullscreen, selectedTag, onTagC
         {state === "idle" ? (
           <button
             onClick={start}
-            className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors ${
-              isFocus
-                ? "bg-emerald-500 hover:bg-emerald-600 text-white"
-                : "bg-amber-500 hover:bg-amber-600 text-white"
-            }`}
+            className="w-16 h-16 rounded-full flex items-center justify-center transition-colors text-white"
+            style={isFocus && selectedTag
+              ? { backgroundColor: TAG_COLORS[selectedTag] }
+              : undefined
+            }
           >
-            <PlayIcon size={28} />
+            {!(isFocus && selectedTag) && (
+              <span className={`absolute inset-0 rounded-full ${btnBgClass}`} />
+            )}
+            <PlayIcon size={28} className="relative z-10" />
           </button>
         ) : (
           <>
@@ -148,13 +172,16 @@ export default function FocusTab({ timer, onEnterFullscreen, selectedTag, onTagC
 
             <button
               onClick={state === "running" ? pause : resume}
-              className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors ${
-                isFocus
-                  ? "bg-emerald-500 hover:bg-emerald-600 text-white"
-                  : "bg-amber-500 hover:bg-amber-600 text-white"
-              }`}
+              className="w-16 h-16 rounded-full flex items-center justify-center transition-colors text-white"
+              style={isFocus && selectedTag
+                ? { backgroundColor: TAG_COLORS[selectedTag] }
+                : undefined
+              }
             >
-              {state === "running" ? <PauseIcon size={28} /> : <PlayIcon size={28} />}
+              {!(isFocus && selectedTag) && (
+                <span className={`absolute inset-0 rounded-full ${btnBgClass}`} />
+              )}
+              {state === "running" ? <PauseIcon size={28} className="relative z-10" /> : <PlayIcon size={28} className="relative z-10" />}
             </button>
 
             <button

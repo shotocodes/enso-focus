@@ -15,6 +15,7 @@ interface Options {
 export function useAmbientSound({ enabled, type, volume, isPlaying, mode }: Options): void {
   useEffect(() => {
     if (enabled && isPlaying) {
+      // startAmbient is now async but we fire-and-forget
       startAmbient(mode === "focus" ? type : "break", volume);
     } else {
       stopAmbient();
@@ -22,7 +23,6 @@ export function useAmbientSound({ enabled, type, volume, isPlaying, mode }: Opti
     return () => stopAmbient();
   }, [enabled, isPlaying, type, mode, volume]);
 
-  // Real-time volume adjustment
   useEffect(() => {
     if (enabled && isPlaying) {
       setAmbientVolume(volume);

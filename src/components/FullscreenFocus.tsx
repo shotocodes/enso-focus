@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { t } from "@/lib/i18n";
-import { TimerMode, TimerState } from "@/types";
+import { TimerMode, TimerState, FocusTag, TAG_COLORS, TAG_I18N_KEYS } from "@/types";
 import { PlayIcon, PauseIcon, SkipIcon, ShrinkIcon } from "./Icons";
 
 interface Props {
@@ -15,6 +15,7 @@ interface Props {
   onReset: () => void;
   onSkip: () => void;
   onExit: () => void;
+  selectedTag?: FocusTag | null;
 }
 
 function formatTime(seconds: number): string {
@@ -33,10 +34,12 @@ export default function FullscreenFocus({
   onReset,
   onSkip,
   onExit,
+  selectedTag,
 }: Props) {
   const [showControls, setShowControls] = useState(true);
   const isFocus = mode === "focus";
   const progress = totalSeconds > 0 ? (totalSeconds - secondsLeft) / totalSeconds : 0;
+  const ringColor = isFocus && selectedTag ? TAG_COLORS[selectedTag] : undefined;
 
   const size = 360;
   const strokeWidth = 4;
@@ -49,11 +52,19 @@ export default function FullscreenFocus({
       className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center cursor-pointer select-none"
       onClick={() => setShowControls((v) => !v)}
     >
-      {/* Mode label */}
-      <div className={`mb-4 text-sm font-medium transition-opacity duration-300 ${
-        showControls ? "opacity-100" : "opacity-0"
-      } ${isFocus ? "text-emerald-500" : "text-amber-500"}`}>
-        {t(isFocus ? "focus.mode.focus" : "focus.mode.break")}
+      {/* Mode label + tag */}
+      <div
+        className={`mb-4 text-sm font-medium transition-opacity duration-300 ${
+          showControls ? "opacity-100" : "opacity-0"
+        }`}
+        style={ringColor ? { color: ringColor } : undefined}
+      >
+        <span className={ringColor ? "" : (isFocus ? "text-emerald-500" : "text-amber-500")}>
+          {isFocus && selectedTag
+            ? t(TAG_I18N_KEYS[selectedTag])
+            : t(isFocus ? "focus.mode.focus" : "focus.mode.break")
+          }
+        </span>
       </div>
 
       {/* Timer ring */}
@@ -77,9 +88,8 @@ export default function FullscreenFocus({
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={dashOffset}
-            className={`transition-all duration-1000 ease-linear ${
-              isFocus ? "text-emerald-500" : "text-amber-500"
-            }`}
+            className={`transition-all duration-1000 ease-linear ${ringColor ? "" : (isFocus ? "text-emerald-500" : "text-amber-500")}`}
+            style={ringColor ? { stroke: ringColor } : undefined}
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
@@ -108,11 +118,10 @@ export default function FullscreenFocus({
 
         <button
           onClick={state === "running" ? onPause : onResume}
-          className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors ${
-            isFocus
-              ? "bg-emerald-500 hover:bg-emerald-600"
-              : "bg-amber-500 hover:bg-amber-600"
-          } text-white`}
+          className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors text-white ${
+            ringColor ? "" : (isFocus ? "bg-emerald-500 hover:bg-emerald-600" : "bg-amber-500 hover:bg-amber-600")
+          }`}
+          style={ringColor ? { backgroundColor: ringColor } : undefined}
         >
           {state === "running" ? <PauseIcon size={28} /> : <PlayIcon size={28} />}
         </button>

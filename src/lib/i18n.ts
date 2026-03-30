@@ -116,6 +116,8 @@ const translations: Record<string, Record<Locale, string>> = {
   "menu.ensoTimerDesc": { ja: "人生という時間を可視化する", en: "Visualize the time called life", zh: "将人生的时间可视化", ko: "인생이라는 시간을 시각화하다" },
   "menu.ensoMind": { ja: "ENSO MIND", en: "ENSO MIND", zh: "ENSO MIND", ko: "ENSO MIND" },
   "menu.ensoMindDesc": { ja: "内省と振り返り", en: "Reflection & mindfulness", zh: "内省与回顾", ko: "내성과 되돌아보기" },
+  "menu.ensoCommunity": { ja: "ENSO COMMUNITY", en: "ENSO COMMUNITY", zh: "ENSO COMMUNITY", ko: "ENSO COMMUNITY" },
+  "menu.ensoCommunityDesc": { ja: "集中する仲間とつながる", en: "Connect with focused peers", zh: "与专注的伙伴连接", ko: "집중하는 동료와 연결하다" },
   "menu.comingSoon": { ja: "Coming Soon", en: "Coming Soon", zh: "即将推出", ko: "출시 예정" },
 
   // Language names
