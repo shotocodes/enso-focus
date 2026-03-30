@@ -103,7 +103,7 @@ const translations: Record<string, Record<Locale, string>> = {
   "settings.ambientVolume": { ja: "環境音の音量", en: "Ambient Volume", zh: "环境音音量", ko: "환경음 음량" },
   "ambient.thunder": { ja: "雷雨", en: "Thunder", zh: "雷雨", ko: "천둥" },
   "ambient.fire": { ja: "焚き火", en: "Fireplace", zh: "壁炉", ko: "모닥불" },
-  "ambient.whitenoise": { ja: "ホワイトノイズ", en: "White Noise", zh: "白噪音", ko: "백색소음" },
+  "ambient.cafe": { ja: "カフェ", en: "Cafe", zh: "咖啡厅", ko: "카페" },
   "ambient.birds": { ja: "小鳥", en: "Birds", zh: "鸟鸣", ko: "새소리" },
   "ambient.waves": { ja: "波", en: "Waves", zh: "海浪", ko: "파도" },
 

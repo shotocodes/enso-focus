@@ -4,7 +4,7 @@ import { AmbientSoundType } from "@/types";
 const SOUND_FILES: Record<AmbientSoundType, string> = {
   thunder: "/sounds/thunder.mp3",
   fire: "/sounds/fire.mp3",
-  whitenoise: "/sounds/whitenoise.mp3",
+  cafe: "/sounds/cafe.mp3",
   birds: "/sounds/birds.mp3",
   waves: "/sounds/waves.mp3",
 };
@@ -121,7 +121,7 @@ function startGeneratedFallback(type: AmbientSoundType | "break", volume: number
   switch (type) {
     case "thunder": startThunder(audioCtx, masterGain); break;
     case "fire": startFire(audioCtx, masterGain); break;
-    case "whitenoise": startWhiteNoise(audioCtx, masterGain); break;
+    case "cafe": startWhiteNoise(audioCtx, masterGain); break;
     case "birds": startBirds(audioCtx, masterGain); break;
     case "waves": startWaves(audioCtx, masterGain); break;
     case "break": startBreakSound(audioCtx, masterGain); break;
