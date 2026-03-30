@@ -147,16 +147,12 @@ export default function FocusTab({ timer, onEnterFullscreen, selectedTag, onTagC
         {state === "idle" ? (
           <button
             onClick={start}
-            className="w-16 h-16 rounded-full flex items-center justify-center transition-colors text-white"
-            style={isFocus && selectedTag
-              ? { backgroundColor: TAG_COLORS[selectedTag] }
-              : undefined
-            }
+            className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors text-white ${
+              isFocus && selectedTag ? "" : btnBgClass
+            }`}
+            style={isFocus && selectedTag ? { backgroundColor: TAG_COLORS[selectedTag] } : undefined}
           >
-            {!(isFocus && selectedTag) && (
-              <span className={`absolute inset-0 rounded-full ${btnBgClass}`} />
-            )}
-            <PlayIcon size={28} className="relative z-10" />
+            <PlayIcon size={28} />
           </button>
         ) : (
           <>
@@ -172,16 +168,12 @@ export default function FocusTab({ timer, onEnterFullscreen, selectedTag, onTagC
 
             <button
               onClick={state === "running" ? pause : resume}
-              className="w-16 h-16 rounded-full flex items-center justify-center transition-colors text-white"
-              style={isFocus && selectedTag
-                ? { backgroundColor: TAG_COLORS[selectedTag] }
-                : undefined
-              }
+              className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors text-white ${
+                isFocus && selectedTag ? "" : btnBgClass
+              }`}
+              style={isFocus && selectedTag ? { backgroundColor: TAG_COLORS[selectedTag] } : undefined}
             >
-              {!(isFocus && selectedTag) && (
-                <span className={`absolute inset-0 rounded-full ${btnBgClass}`} />
-              )}
-              {state === "running" ? <PauseIcon size={28} className="relative z-10" /> : <PlayIcon size={28} className="relative z-10" />}
+              {state === "running" ? <PauseIcon size={28} /> : <PlayIcon size={28} />}
             </button>
 
             <button
