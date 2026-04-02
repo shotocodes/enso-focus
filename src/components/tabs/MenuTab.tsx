@@ -19,7 +19,7 @@ export default function MenuTab() {
         <h3 className="text-sm font-bold mb-3">{t("menu.ensoApps")}</h3>
         <div className="space-y-1">
           {/* Dashboard */}
-          <a href="https://ensolife.app" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 -mx-1 rounded-xl hover:bg-subtle transition-colors">
+          <a href="https://ensolife.app" className="flex items-center gap-3 p-3 -mx-1 rounded-xl hover:bg-subtle transition-colors">
             <svg width={36} height={36} viewBox="0 0 100 100" fill="none" className="text-emerald-500 shrink-0">
               <circle cx="50" cy="50" r="32" stroke="currentColor" strokeWidth="5" fill="none" opacity="0.9" />
             </svg>
@@ -27,11 +27,11 @@ export default function MenuTab() {
               <span className="text-sm font-medium block">{t("menu.ensoDashboard")}</span>
               <span className="text-xs text-muted block">{t("menu.ensoDashboardDesc")}</span>
             </div>
-            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" /></svg>
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0"><polyline points="9 18 15 12 9 6" /></svg>
           </a>
 
           {/* TIMER */}
-          <a href="https://ensolife.app/timer" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 -mx-1 rounded-xl hover:bg-subtle transition-colors">
+          <a href="https://ensolife.app/timer" className="flex items-center gap-3 p-3 -mx-1 rounded-xl hover:bg-subtle transition-colors">
             <svg width={36} height={36} viewBox="0 0 100 100" fill="none" className="text-emerald-500 shrink-0">
               <circle cx="50" cy="50" r="32" stroke="currentColor" strokeWidth="5" fill="none" opacity="0.9" />
               <circle cx="50" cy="18" r="5" fill="currentColor" />
@@ -40,11 +40,11 @@ export default function MenuTab() {
               <span className="text-sm font-medium block">{t("menu.ensoTimer")}</span>
               <span className="text-xs text-muted block">{t("menu.ensoTimerDesc")}</span>
             </div>
-            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" /></svg>
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0"><polyline points="9 18 15 12 9 6" /></svg>
           </a>
 
           {/* JOURNAL */}
-          <a href="https://ensolife.app/journal" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 -mx-1 rounded-xl hover:bg-subtle transition-colors">
+          <a href="https://ensolife.app/journal" className="flex items-center gap-3 p-3 -mx-1 rounded-xl hover:bg-subtle transition-colors">
             <svg width={36} height={36} viewBox="0 0 100 100" fill="none" className="text-emerald-500 shrink-0">
               <circle cx="50" cy="50" r="32" stroke="currentColor" strokeWidth="5" fill="none" opacity="0.9" />
               <line x1="38" y1="42" x2="62" y2="42" stroke="currentColor" strokeWidth="3" strokeLinecap="round" opacity="0.4" />
@@ -55,11 +55,11 @@ export default function MenuTab() {
               <span className="text-sm font-medium block">{t("menu.ensoJournal")}</span>
               <span className="text-xs text-muted block">{t("menu.ensoJournalDesc")}</span>
             </div>
-            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" /></svg>
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0"><polyline points="9 18 15 12 9 6" /></svg>
           </a>
 
           {/* TASK */}
-          <a href="https://ensolife.app/task" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 -mx-1 rounded-xl hover:bg-subtle transition-colors">
+          <a href="https://ensolife.app/task" className="flex items-center gap-3 p-3 -mx-1 rounded-xl hover:bg-subtle transition-colors">
             <svg width={36} height={36} viewBox="0 0 100 100" fill="none" className="text-emerald-500 shrink-0">
               <circle cx="50" cy="50" r="32" stroke="currentColor" strokeWidth="5" fill="none" opacity="0.9" />
               <polyline points="38,50 46,58 62,40" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -68,7 +68,7 @@ export default function MenuTab() {
               <span className="text-sm font-medium block">{t("menu.ensoTask")}</span>
               <span className="text-xs text-muted block">{t("menu.ensoTaskDesc")}</span>
             </div>
-            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" /></svg>
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="text-muted shrink-0"><polyline points="9 18 15 12 9 6" /></svg>
           </a>
 
           {/* COMMUNITY - Coming Soon */}
