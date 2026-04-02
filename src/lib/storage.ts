@@ -3,6 +3,10 @@ import { Locale } from "./i18n";
 
 const PREFIX = "enso-focus-";
 
+function toLocalDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 function get<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
   try {
@@ -63,7 +67,7 @@ export function getDailyStats(days: number = 7): { date: string; duration: numbe
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(now); d.setDate(d.getDate() - i);
     const dayStart = startOfDay(d).getTime(); const dayEnd = dayStart + 86400000;
-    const dateStr = d.toISOString().slice(0, 10);
+    const dateStr = toLocalDateStr(d);
     let duration = 0;
     for (const s of sessions) { const t = new Date(s.endedAt).getTime(); if (t >= dayStart && t < dayEnd) duration += s.duration; }
     result.push({ date: dateStr, duration });
@@ -76,14 +80,14 @@ export function getStreak(): number {
   const sessions = getSessions();
   if (sessions.length === 0) return 0;
   const daysWithSessions = new Set<string>();
-  for (const s of sessions) daysWithSessions.add(new Date(s.endedAt).toISOString().slice(0, 10));
+  for (const s of sessions) daysWithSessions.add(toLocalDateStr(new Date(s.endedAt)));
   let streak = 0;
   const d = new Date();
   // Check if today has sessions, if not start from yesterday
-  const todayStr = d.toISOString().slice(0, 10);
+  const todayStr = toLocalDateStr(d);
   if (!daysWithSessions.has(todayStr)) d.setDate(d.getDate() - 1);
   while (true) {
-    const ds = d.toISOString().slice(0, 10);
+    const ds = toLocalDateStr(d);
     if (daysWithSessions.has(ds)) { streak++; d.setDate(d.getDate() - 1); } else break;
   }
   return streak;
@@ -158,7 +162,7 @@ export function recordFocusToJournal(taskTitle: string, durationMin: number): vo
   if (typeof window === "undefined") return;
   try {
     const now = new Date();
-    const todayStr = now.toISOString().slice(0, 10);
+    const todayStr = toLocalDateStr(now);
     const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 
     const JOURNAL_KEY = "enso-journal-entries";
