@@ -18,6 +18,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://ensolife.app/focus"),
   title: "ENSO FOCUS",
   description: "Focus is the ultimate productivity. Build deep concentration habits with the Pomodoro Technique.",
   openGraph: {
