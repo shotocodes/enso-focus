@@ -145,9 +145,9 @@ export function getEnsoTasks(): EnsoTask[] {
   try {
     const raw = localStorage.getItem("enso-task-tasks");
     if (!raw) return [];
-    const tasks = JSON.parse(raw) as Array<EnsoTask & { order?: number }>;
+    const tasks = JSON.parse(raw) as Array<EnsoTask & { order?: number; goalId?: string; active?: boolean }>;
     return tasks
-      .filter((t) => !t.completed)
+      .filter((t) => !t.completed && (!t.goalId || t.active === true))
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   } catch { return []; }
 }
