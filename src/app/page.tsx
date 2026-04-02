@@ -95,6 +95,13 @@ export default function Home() {
     setEnsoTasks(getEnsoTasks());
     setMounted(true);
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/focus/sw.js");
+
+    // TASKデータをページ復帰時に再読み込み
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") setEnsoTasks(getEnsoTasks());
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, []);
 
   useEffect(() => {
