@@ -133,10 +133,14 @@ const translations: Record<string, Record<Locale, string>> = {
   "menu.ensoApps": { ja: "ENSO アプリ", en: "ENSO Apps", zh: "ENSO 应用", ko: "ENSO 앱" },
   "menu.ensoTimer": { ja: "ENSO TIMER", en: "ENSO TIMER", zh: "ENSO TIMER", ko: "ENSO TIMER" },
   "menu.ensoTimerDesc": { ja: "人生という時間を可視化する", en: "Visualize the time called life", zh: "将人生的时间可视化", ko: "인생이라는 시간을 시각화하다" },
-  "menu.ensoMind": { ja: "ENSO MIND", en: "ENSO MIND", zh: "ENSO MIND", ko: "ENSO MIND" },
-  "menu.ensoMindDesc": { ja: "内省と振り返り", en: "Reflection & mindfulness", zh: "内省与回顾", ko: "내성과 되돌아보기" },
+  "menu.ensoDashboard": { ja: "ENSO Dashboard", en: "ENSO Dashboard", zh: "ENSO Dashboard", ko: "ENSO Dashboard" },
+  "menu.ensoDashboardDesc": { ja: "人生をより意識的に生きる", en: "Live more consciously", zh: "更有意识地生活", ko: "더 의식적으로 살다" },
+  "menu.ensoJournal": { ja: "ENSO JOURNAL", en: "ENSO JOURNAL", zh: "ENSO JOURNAL", ko: "ENSO JOURNAL" },
+  "menu.ensoJournalDesc": { ja: "やったことが、勝手に日記になる", en: "Your actions become your journal", zh: "你的行动自动成为日记", ko: "행동이 자동으로 일기가 됩니다" },
+  "menu.ensoTask": { ja: "ENSO TASK", en: "ENSO TASK", zh: "ENSO TASK", ko: "ENSO TASK" },
+  "menu.ensoTaskDesc": { ja: "目標を、行動に変える", en: "Turn goals into action", zh: "将目标转化为行动", ko: "목표를 행동으로" },
   "menu.ensoCommunity": { ja: "ENSO COMMUNITY", en: "ENSO COMMUNITY", zh: "ENSO COMMUNITY", ko: "ENSO COMMUNITY" },
-  "menu.ensoCommunityDesc": { ja: "集中する仲間とつながる", en: "Connect with focused peers", zh: "与专注的伙伴连接", ko: "집중하는 동료와 연결하다" },
+  "menu.ensoCommunityDesc": { ja: "仲間と繋がる", en: "Connect with others", zh: "与同伴连接", ko: "동료와 연결하다" },
   "menu.comingSoon": { ja: "Coming Soon", en: "Coming Soon", zh: "即将推出", ko: "출시 예정" },
 
   // Language names
