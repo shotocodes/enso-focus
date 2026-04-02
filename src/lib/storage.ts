@@ -146,7 +146,10 @@ export function getEnsoTasks(): EnsoTask[] {
     const raw = localStorage.getItem("enso-task-tasks");
     if (!raw) return [];
     const tasks = JSON.parse(raw) as EnsoTask[];
-    return tasks.filter((t) => !t.completed);
+    const order: Record<string, number> = { high: 0, medium: 1, low: 2 };
+    return tasks
+      .filter((t) => !t.completed)
+      .sort((a, b) => (order[a.priority] ?? 1) - (order[b.priority] ?? 1));
   } catch { return []; }
 }
 
