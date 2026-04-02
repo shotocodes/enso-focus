@@ -136,3 +136,58 @@ export function getEnsoTimerLifeConfig(): { birthDate: string; lifeExpectancy: n
 // Locale
 export function getStoredLocale(): Locale { return get("locale", "ja" as Locale); }
 export function saveLocale(locale: Locale): void { set("locale", locale); }
+
+// ===== ENSO TASK連携（読み取り） =====
+import type { EnsoTask } from "@/types";
+
+export function getEnsoTasks(): EnsoTask[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem("enso-task-tasks");
+    if (!raw) return [];
+    const tasks = JSON.parse(raw) as EnsoTask[];
+    return tasks.filter((t) => !t.completed);
+  } catch { return []; }
+}
+
+// ===== ENSO JOURNAL連携（書き込み） =====
+
+export function recordFocusToJournal(taskTitle: string, durationMin: number): void {
+  if (typeof window === "undefined") return;
+  try {
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+    const JOURNAL_KEY = "enso-journal-entries";
+    const raw = localStorage.getItem(JOURNAL_KEY);
+    const entries = raw ? JSON.parse(raw) : [];
+
+    let todayEntry = entries.find((e: { date: string }) => e.date === todayStr);
+    const newActivity = {
+      id: Date.now().toString(),
+      time: timeStr,
+      text: `${taskTitle} (${durationMin}min)`,
+      icon: "focus",
+    };
+
+    if (todayEntry) {
+      todayEntry.manualEntries = todayEntry.manualEntries || [];
+      todayEntry.manualEntries.push(newActivity);
+      todayEntry.updatedAt = now.toISOString();
+    } else {
+      todayEntry = {
+        date: todayStr,
+        notes: [],
+        manualEntries: [newActivity],
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+      };
+      entries.unshift(todayEntry);
+    }
+
+    localStorage.setItem(JOURNAL_KEY, JSON.stringify(entries));
+  } catch (e) {
+    console.error("[enso-focus] Failed to record to journal:", e);
+  }
+}

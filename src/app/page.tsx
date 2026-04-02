@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { AmbientSettings, CompletionSoundType, CustomTag, DailyGoal, DEFAULT_TAGS, TabId, ThemeMode, TimerConfig, TimerMode, DEFAULT_TIMER_CONFIG } from "@/types";
+import { AmbientSettings, CompletionSoundType, CustomTag, DailyGoal, DEFAULT_TAGS, EnsoTask, TabId, ThemeMode, TimerConfig, TimerMode, DEFAULT_TIMER_CONFIG } from "@/types";
 import { Locale, setLocale, t } from "@/lib/i18n";
 import {
   getTimerConfig, saveTimerConfig, getAmbientSettings, saveAmbientSettings,
   getCompletionSound, saveCompletionSound, getDailyGoal, saveDailyGoal, getTags, saveTags,
   getActiveTab, saveActiveTab, getTheme, saveTheme, getStoredLocale,
   saveLocale as saveLocaleStorage, addSession, getStats,
+  getEnsoTasks, recordFocusToJournal,
 } from "@/lib/storage";
 import { playCompletionSound, playAlert } from "@/lib/sound";
 import BottomTabBar from "@/components/BottomTabBar";
@@ -41,6 +42,10 @@ export default function Home() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [sessionVersion, setSessionVersion] = useState(0);
   const [todaySeconds, setTodaySeconds] = useState(0);
+
+  // ENSO TASK連携
+  const [ensoTasks, setEnsoTasks] = useState<EnsoTask[]>([]);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   // Completion modal
   const [showCompletionModal, setShowCompletionModal] = useState(false);
@@ -87,6 +92,7 @@ export default function Home() {
     setTodaySeconds(getStats().today);
     const storedTheme = getTheme(); setThemeState(storedTheme); applyTheme(storedTheme);
     const storedLocale = getStoredLocale(); setLocaleState(storedLocale); setLocale(storedLocale);
+    setEnsoTasks(getEnsoTasks());
     setMounted(true);
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/focus/sw.js");
   }, []);
@@ -102,20 +108,44 @@ export default function Home() {
   // Refresh today's seconds when sessionVersion changes
   useEffect(() => { setTodaySeconds(getStats().today); }, [sessionVersion]);
 
+  const selectedTask = ensoTasks.find((t) => t.id === selectedTaskId);
+
   const handleMemoSave = useCallback((data: { memo: string; tag?: string }) => {
     if (pendingSessionData) {
-      addSession({ ...pendingSessionData, memo: data.memo || undefined, tag: data.tag });
+      addSession({
+        ...pendingSessionData,
+        memo: data.memo || undefined,
+        tag: data.tag,
+        taskId: selectedTaskId ?? undefined,
+        taskTitle: selectedTask?.title,
+      });
       setSessionVersion((v) => v + 1);
+      // JOURNAL連携
+      const durationMin = Math.round(pendingSessionData.duration / 60);
+      const label = selectedTask?.title ?? data.tag ?? "Focus";
+      recordFocusToJournal(label, durationMin);
     }
     setPendingSessionData(null);
     setShowCompletionModal(false);
-  }, [pendingSessionData]);
+    setSelectedTaskId(null);
+  }, [pendingSessionData, selectedTaskId, selectedTask]);
 
   const handleMemoSkip = useCallback(() => {
-    if (pendingSessionData) { addSession(pendingSessionData); setSessionVersion((v) => v + 1); }
+    if (pendingSessionData) {
+      addSession({
+        ...pendingSessionData,
+        taskId: selectedTaskId ?? undefined,
+        taskTitle: selectedTask?.title,
+      });
+      setSessionVersion((v) => v + 1);
+      const durationMin = Math.round(pendingSessionData.duration / 60);
+      const label = selectedTask?.title ?? "Focus";
+      recordFocusToJournal(label, durationMin);
+    }
     setPendingSessionData(null);
     setShowCompletionModal(false);
-  }, [pendingSessionData]);
+    setSelectedTaskId(null);
+  }, [pendingSessionData, selectedTaskId, selectedTask]);
 
   const handleTabChange = useCallback((tab: TabId) => { setActiveTab(tab); saveActiveTab(tab); }, []);
   const handleTimerConfigChange = useCallback((c: TimerConfig) => { setTimerConfig(c); saveTimerConfig(c); }, []);
@@ -156,7 +186,8 @@ export default function Home() {
         {activeTab === "focus" && (
           <FocusTab key={locale} timer={timer} onEnterFullscreen={handleEnterFullscreen}
             ambientEnabled={ambientSettings.enabled} onAmbientToggle={handleAmbientToggle}
-            dailyGoal={dailyGoal} todaySeconds={todaySeconds} />
+            dailyGoal={dailyGoal} todaySeconds={todaySeconds}
+            ensoTasks={ensoTasks} selectedTaskId={selectedTaskId} onSelectTask={setSelectedTaskId} />
         )}
         {activeTab === "history" && <HistoryTab key={`${locale}-${sessionVersion}`} />}
         {activeTab === "settings" && (

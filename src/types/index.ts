@@ -39,8 +39,18 @@ export interface FocusSession {
   startedAt: string;
   endedAt: string;
   duration: number;
-  tag?: string;   // tag id
+  tag?: string;       // tag id
   memo?: string;
+  taskId?: string;    // ENSO TASK連携
+  taskTitle?: string; // 表示用タスク名
+}
+
+/** ENSO TASKから読み取るタスク型 */
+export interface EnsoTask {
+  id: string;
+  title: string;
+  priority: "high" | "medium" | "low";
+  completed: boolean;
 }
 
 // Completion sound

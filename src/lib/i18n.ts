@@ -27,6 +27,7 @@ const translations: Record<string, Record<Locale, string>> = {
   "focus.reset": { ja: "リセット", en: "Reset", zh: "重置", ko: "리셋" },
   "focus.skip": { ja: "スキップ", en: "Skip", zh: "跳过", ko: "건너뛰기" },
   "focus.fullscreen": { ja: "集中モード", en: "Focus Mode", zh: "专注模式", ko: "집중 모드" },
+  "focus.selectTask": { ja: "何に集中する？", en: "What will you focus on?", zh: "你要专注什么？", ko: "무엇에 집중할까요?" },
   "focus.exitFullscreen": { ja: "終了", en: "Exit", zh: "退出", ko: "종료" },
   "focus.sessionComplete": { ja: "集中セッション完了！", en: "Focus session complete!", zh: "专注结束！", ko: "집중 세션 완료!" },
   "focus.breakComplete": { ja: "休憩終了！", en: "Break is over!", zh: "休息结束！", ko: "휴식 종료!" },

@@ -1,7 +1,7 @@
 "use client";
 
 import { t } from "@/lib/i18n";
-import { TimerMode, TimerState, DailyGoal } from "@/types";
+import { TimerMode, TimerState, DailyGoal, EnsoTask } from "@/types";
 import { PlayIcon, PauseIcon, SkipIcon, ExpandIcon, SpeakerOnIcon, SpeakerOffIcon } from "../Icons";
 
 interface TimerHandle {
@@ -23,6 +23,9 @@ interface Props {
   onAmbientToggle: () => void;
   dailyGoal: DailyGoal;
   todaySeconds: number;
+  ensoTasks: EnsoTask[];
+  selectedTaskId: string | null;
+  onSelectTask: (taskId: string | null) => void;
 }
 
 function formatTime(seconds: number): string {
@@ -31,7 +34,9 @@ function formatTime(seconds: number): string {
   return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
-export default function FocusTab({ timer, onEnterFullscreen, ambientEnabled, onAmbientToggle, dailyGoal, todaySeconds }: Props) {
+const PRIORITY_COLORS: Record<string, string> = { high: "text-red-400", medium: "text-amber-400", low: "text-emerald-400" };
+
+export default function FocusTab({ timer, onEnterFullscreen, ambientEnabled, onAmbientToggle, dailyGoal, todaySeconds, ensoTasks, selectedTaskId, onSelectTask }: Props) {
   const { secondsLeft, totalSeconds, mode, state, start, pause, resume, reset, skip } = timer;
   const progress = totalSeconds > 0 ? (totalSeconds - secondsLeft) / totalSeconds : 0;
   const isFocus = mode === "focus";
@@ -49,6 +54,38 @@ export default function FocusTab({ timer, onEnterFullscreen, ambientEnabled, onA
 
   return (
     <div className="animate-tab-enter flex flex-col items-center">
+      {/* ENSO TASK 連携: タスク選択 */}
+      {ensoTasks.length > 0 && state === "idle" && (
+        <div className="w-full max-w-xs mb-5">
+          <p className="text-xs text-muted mb-2">{t("focus.selectTask")}</p>
+          <div className="space-y-1.5 max-h-32 overflow-y-auto">
+            {ensoTasks.slice(0, 5).map((task) => (
+              <button
+                key={task.id}
+                onClick={() => onSelectTask(selectedTaskId === task.id ? null : task.id)}
+                className={`w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all ${
+                  selectedTaskId === task.id
+                    ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-500"
+                    : "bg-card border border-card hover:border-emerald-500/20"
+                }`}
+              >
+                <span className={`text-[10px] font-bold ${PRIORITY_COLORS[task.priority] ?? "text-muted"}`}>
+                  {task.priority === "high" ? "!" : task.priority === "medium" ? "-" : ""}
+                </span>
+                <span className="truncate">{task.title}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 選択中のタスク表示（タイマー実行中） */}
+      {selectedTaskId && state !== "idle" && (
+        <div className="mb-3 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-medium max-w-xs truncate">
+          {ensoTasks.find((t) => t.id === selectedTaskId)?.title}
+        </div>
+      )}
+
       {/* Mode label */}
       <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium mb-4 ${
         isFocus ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
