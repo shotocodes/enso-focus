@@ -88,7 +88,7 @@ export default function Home() {
     const storedTheme = getTheme(); setThemeState(storedTheme); applyTheme(storedTheme);
     const storedLocale = getStoredLocale(); setLocaleState(storedLocale); setLocale(storedLocale);
     setMounted(true);
-    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/focus/sw.js");
   }, []);
 
   useEffect(() => {

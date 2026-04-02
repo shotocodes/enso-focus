@@ -45,7 +45,7 @@ export default function MenuTab() {
 
         {/* ENSO TIMER */}
         <a
-          href="https://enso-timer.vercel.app"
+          href="https://enso-timer-2.vercel.app"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-3 p-3 -mx-1 rounded-xl hover:bg-subtle transition-colors"
