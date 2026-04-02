@@ -92,7 +92,15 @@ export default function Home() {
     setTodaySeconds(getStats().today);
     const storedTheme = getTheme(); setThemeState(storedTheme); applyTheme(storedTheme);
     const storedLocale = getStoredLocale(); setLocaleState(storedLocale); setLocale(storedLocale);
-    setEnsoTasks(getEnsoTasks());
+    const loadedTasks = getEnsoTasks();
+    setEnsoTasks(loadedTasks);
+    // クエリパラメータからタスク自動選択 (?taskId=xxx)
+    const params = new URLSearchParams(window.location.search);
+    const taskIdParam = params.get("taskId");
+    if (taskIdParam && loadedTasks.some((t) => t.id === taskIdParam)) {
+      setSelectedTaskId(taskIdParam);
+      setActiveTab("focus");
+    }
     setMounted(true);
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/focus/sw.js");
 
