@@ -1,0 +1,14 @@
+{
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "https://ensolife.app/focus",
+      "permanent": true
+    },
+    {
+      "source": "/:path((?!focus).*)",
+      "destination": "https://ensolife.app/focus",
+      "permanent": true
+    }
+  ]
+}
