@@ -8,6 +8,7 @@ import { CheckCircleIcon } from "./Icons";
 interface Props {
   duration: number;
   tags: CustomTag[];
+  defaultMemo?: string;
   onSave: (data: { memo: string; tag?: string }) => void;
   onSkip: () => void;
 }
@@ -19,8 +20,8 @@ function formatDuration(seconds: number): string {
   return `${m}${t("time.minutes")}`;
 }
 
-export default function CompletionModal({ duration, tags, onSave, onSkip }: Props) {
-  const [memo, setMemo] = useState("");
+export default function CompletionModal({ duration, tags, defaultMemo, onSave, onSkip }: Props) {
+  const [memo, setMemo] = useState(defaultMemo ?? "");
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 

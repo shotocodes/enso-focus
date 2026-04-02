@@ -211,7 +211,7 @@ export default function Home() {
       <BottomTabBar key={locale} activeTab={activeTab} onTabChange={handleTabChange} />
 
       {showCompletionModal && pendingSessionData && (
-        <CompletionModal duration={pendingSessionData.duration} tags={tags} onSave={handleMemoSave} onSkip={handleMemoSkip} />
+        <CompletionModal duration={pendingSessionData.duration} tags={tags} defaultMemo={selectedTask?.title} onSave={handleMemoSave} onSkip={handleMemoSkip} />
       )}
     </>
   );
