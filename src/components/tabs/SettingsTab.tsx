@@ -1,7 +1,9 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { t } from "@/lib/i18n";
 import { Locale } from "@/lib/i18n";
+import { exportData, importData } from "@/lib/storage";
 import { playCompletionSound } from "@/lib/sound";
 import { AmbientSettings, AmbientSoundType, AMBIENT_SOUND_I18N_KEYS, CompletionSoundType, COMPLETION_SOUND_I18N_KEYS, CustomTag, DailyGoal, PALETTE, ThemeMode, TimerConfig } from "@/types";
 import { SpeakerOnIcon, SpeakerOffIcon } from "../Icons";
@@ -212,6 +214,59 @@ export default function SettingsTab({
           ))}
         </div>
       </section>
+
+      {/* Data */}
+      <DataSection locale={locale} />
     </div>
+  );
+}
+
+function DataSection({ locale }: { locale: Locale }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [importMsg, setImportMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const handleExport = () => {
+    const json = exportData();
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const d = new Date();
+    const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    a.download = `enso-focus-${ds}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      const ok = importData(text);
+      setImportMsg({ ok, text: ok ? t("settings.importSuccess", locale) : t("settings.importFail", locale) });
+      if (ok) setTimeout(() => window.location.reload(), 1000);
+    };
+    reader.readAsText(file);
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  return (
+    <section className="bg-card rounded-2xl p-4 border border-card space-y-3">
+      <h3 className="text-sm font-medium">{t("settings.data", locale)}</h3>
+      <div className="flex gap-2">
+        <button onClick={handleExport} className="flex-1 py-2 rounded-full text-sm bg-subtle text-muted hover:text-white transition-colors">
+          {t("settings.export", locale)}
+        </button>
+        <button onClick={() => fileRef.current?.click()} className="flex-1 py-2 rounded-full text-sm bg-subtle text-muted hover:text-white transition-colors">
+          {t("settings.import", locale)}
+        </button>
+        <input ref={fileRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
+      </div>
+      {importMsg && (
+        <p className={`text-xs text-center ${importMsg.ok ? "text-emerald-500" : "text-red-400"}`}>{importMsg.text}</p>
+      )}
+    </section>
   );
 }

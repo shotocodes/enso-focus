@@ -125,6 +125,32 @@ export function saveActiveTab(tab: TabId): void { set("active-tab", tab); }
 export function getTheme(): ThemeMode { return get("theme", "dark" as ThemeMode); }
 export function saveTheme(theme: ThemeMode): void { set("theme", theme); }
 
+// Export / Import
+const EXPORT_KEYS = ["sessions", "timer-config", "tags", "completion-sound", "ambient", "daily-goal"];
+
+export function exportData(): string {
+  const data: Record<string, unknown> = {};
+  for (const key of EXPORT_KEYS) {
+    const raw = localStorage.getItem(PREFIX + key);
+    if (raw) data[PREFIX + key] = JSON.parse(raw);
+  }
+  return JSON.stringify(data, null, 2);
+}
+
+export function importData(json: string): boolean {
+  try {
+    const data = JSON.parse(json) as Record<string, unknown>;
+    for (const [key, val] of Object.entries(data)) {
+      if (key.startsWith(PREFIX)) {
+        localStorage.setItem(key, JSON.stringify(val));
+      }
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // Cross-app: read ENSO TIMER life config
 export function getEnsoTimerLifeConfig(): { birthDate: string; lifeExpectancy: number } | null {
   if (typeof window === "undefined") return null;

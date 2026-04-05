@@ -174,7 +174,13 @@ export default function HistoryTab() {
             </button>
           </div>
         ) : (
-          <div className="text-center text-muted text-sm py-8">{t("history.noSessions")}</div>
+          <div className="text-center py-8 px-4">
+            <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" className="mx-auto mb-3 text-muted opacity-50">
+              <circle cx="12" cy="12" r="10" /><polyline points="12,6 12,12 16,14" />
+            </svg>
+            <p className="text-sm font-medium text-muted">{t("history.noSessions")}</p>
+            <p className="text-xs text-muted opacity-60 mt-1">{t("history.noSessionsHint")}</p>
+          </div>
         )}
       </div>
     </div>
