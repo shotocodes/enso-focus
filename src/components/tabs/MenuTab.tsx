@@ -19,7 +19,7 @@ export default function MenuTab() {
         <h3 className="text-sm font-bold mb-3">{t("menu.ensoApps")}</h3>
         <div className="space-y-1">
           {/* Dashboard */}
-          <a href="https://ensolife.app" className="flex items-center gap-3 p-3 -mx-1 rounded-xl hover:bg-subtle transition-colors">
+          <a href="https://ensolife.app/brain" className="flex items-center gap-3 p-3 -mx-1 rounded-xl hover:bg-subtle transition-colors">
             <svg width={36} height={36} viewBox="0 0 100 100" fill="none" className="text-emerald-500 shrink-0">
               <circle cx="50" cy="50" r="32" stroke="currentColor" strokeWidth="5" fill="none" opacity="0.9" />
             </svg>
