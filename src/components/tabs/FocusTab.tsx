@@ -16,8 +16,12 @@ interface TimerHandle {
   skip: () => void;
 }
 
+const FOCUS_QUICK_OPTIONS = [15, 25, 30, 45, 60];
+
 interface Props {
   timer: TimerHandle;
+  focusMinutes: number;
+  onFocusMinutesChange: (m: number) => void;
   onEnterFullscreen: () => void;
   ambientEnabled: boolean;
   onAmbientToggle: () => void;
@@ -36,7 +40,7 @@ function formatTime(seconds: number): string {
 
 const PRIORITY_COLORS: Record<string, string> = { high: "text-red-400", medium: "text-amber-400", low: "text-emerald-400" };
 
-export default function FocusTab({ timer, onEnterFullscreen, ambientEnabled, onAmbientToggle, dailyGoal, todaySeconds, ensoTasks, selectedTaskId, onSelectTask }: Props) {
+export default function FocusTab({ timer, focusMinutes, onFocusMinutesChange, onEnterFullscreen, ambientEnabled, onAmbientToggle, dailyGoal, todaySeconds, ensoTasks, selectedTaskId, onSelectTask }: Props) {
   const { secondsLeft, totalSeconds, mode, state, start, pause, resume, reset, skip } = timer;
   const progress = totalSeconds > 0 ? (totalSeconds - secondsLeft) / totalSeconds : 0;
   const isFocus = mode === "focus";
@@ -110,6 +114,25 @@ export default function FocusTab({ timer, onEnterFullscreen, ambientEnabled, onA
           {state === "idle" && <span className="text-xs text-muted mt-2">{t("focus.ready")}</span>}
         </div>
       </div>
+
+      {/* Quick duration selector (idle only) */}
+      {state === "idle" && isFocus && (
+        <div className="flex items-center gap-2 mb-6">
+          {FOCUS_QUICK_OPTIONS.map((m) => (
+            <button
+              key={m}
+              onClick={() => onFocusMinutesChange(m)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                focusMinutes === m
+                  ? "bg-emerald-500 text-white"
+                  : "bg-card border border-card text-muted hover:text-emerald-500"
+              }`}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Controls */}
       <div className="flex items-center gap-4">

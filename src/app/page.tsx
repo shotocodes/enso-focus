@@ -183,7 +183,15 @@ export default function Home() {
     return () => document.removeEventListener("fullscreenchange", handler);
   }, []);
 
-  if (!mounted) return <div className="min-h-screen flex items-center justify-center"><div className="text-muted text-lg">Loading...</div></div>;
+  if (!mounted) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+      <svg width={48} height={48} viewBox="0 0 100 100" fill="none" className="text-emerald-500 animate-pulse">
+        <circle cx="50" cy="50" r="32" stroke="currentColor" strokeWidth="5" fill="none" opacity="0.3" />
+        <circle cx="50" cy="50" r="5" fill="currentColor" />
+      </svg>
+      <span className="text-xs text-muted">ENSO FOCUS</span>
+    </div>
+  );
 
   if (isFullscreen) return (
     <FullscreenFocus secondsLeft={timer.secondsLeft} totalSeconds={timer.totalSeconds} mode={timer.mode} state={timer.state}
@@ -199,7 +207,10 @@ export default function Home() {
         </div>
 
         {activeTab === "focus" && (
-          <FocusTab key={locale} timer={timer} onEnterFullscreen={handleEnterFullscreen}
+          <FocusTab key={locale} timer={timer}
+            focusMinutes={timerConfig.focusMinutes}
+            onFocusMinutesChange={(m) => handleTimerConfigChange({ ...timerConfig, focusMinutes: m })}
+            onEnterFullscreen={handleEnterFullscreen}
             ambientEnabled={ambientSettings.enabled} onAmbientToggle={handleAmbientToggle}
             dailyGoal={dailyGoal} todaySeconds={todaySeconds}
             ensoTasks={ensoTasks} selectedTaskId={selectedTaskId} onSelectTask={setSelectedTaskId} />
