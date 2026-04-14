@@ -38,10 +38,11 @@ function formatTime(seconds: number): string {
   return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
-function StopSquareIcon({ size = 20 }: { size?: number }) {
+function ResetIcon({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="6" y="6" width="12" height="12" rx="2" />
+      <path d="M1 4v6h6" />
+      <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
     </svg>
   );
 }
@@ -153,7 +154,7 @@ export default function FocusTab({ timer, focusMinutes, onFocusMinutesChange, on
           <>
             <button onClick={reset}
               className="w-12 h-12 rounded-full bg-card border border-card flex items-center justify-center text-muted hover:text-red-400 transition-colors">
-              <StopSquareIcon size={18} />
+              <ResetIcon size={18} />
             </button>
             <button onClick={state === "running" ? pause : resume}
               className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors text-white ${accentClass}`}>
