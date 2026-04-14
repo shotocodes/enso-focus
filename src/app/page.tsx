@@ -137,7 +137,8 @@ export default function Home() {
       setSessionVersion((v) => v + 1);
       // JOURNAL連携
       const durationMin = Math.round(pendingSessionData.duration / 60);
-      const label = selectedTask?.title ?? data.tag ?? "Focus";
+      const tagName = data.tag ? tags.find((t) => t.id === data.tag)?.name || data.tag : null;
+      const label = data.memo || selectedTask?.title || tagName || "Focus";
       recordFocusToJournal(label, durationMin);
     }
     setPendingSessionData(null);
@@ -154,7 +155,7 @@ export default function Home() {
       });
       setSessionVersion((v) => v + 1);
       const durationMin = Math.round(pendingSessionData.duration / 60);
-      const label = selectedTask?.title ?? "Focus";
+      const label = selectedTask?.title || "Focus";
       recordFocusToJournal(label, durationMin);
     }
     setPendingSessionData(null);
