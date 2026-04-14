@@ -18,6 +18,7 @@ interface UseTimerReturn {
   resume: () => void;
   reset: () => void;
   skip: () => void;
+  startBreak: () => void;
 }
 
 export function useTimer({ config, onComplete }: UseTimerOptions): UseTimerReturn {
@@ -65,19 +66,28 @@ export function useTimer({ config, onComplete }: UseTimerOptions): UseTimerRetur
   // Handle completion
   useEffect(() => {
     if (secondsLeft === 0 && state === "running") {
+      const completedMode = mode;
       setState("idle");
-      onComplete(mode);
+      onComplete(completedMode);
 
-      const nextMode: TimerMode = mode === "focus" ? "break" : "focus";
+      const nextMode: TimerMode = completedMode === "focus" ? "break" : "focus";
       setMode(nextMode);
       setSecondsLeft(nextMode === "focus" ? config.focusMinutes * 60 : config.breakMinutes * 60);
 
-      if (nextMode === "break" && config.autoStartBreak) {
-        setState("running");
-        startTimeRef.current = new Date().toISOString();
+      // Auto-start break only if coming from break→focus (no modal interruption)
+      // For focus→break, page.tsx calls startBreak() after CompletionModal closes
+      if (nextMode === "focus" && completedMode === "break") {
+        // break完了 → focusは自動開始しない（ユーザーが開始ボタンを押す）
       }
     }
   }, [secondsLeft, state, mode, config, onComplete]);
+
+  const startBreak = useCallback(() => {
+    if (mode === "break" && state === "idle") {
+      setState("running");
+      startTimeRef.current = new Date().toISOString();
+    }
+  }, [mode, state]);
 
   const start = useCallback(() => {
     startTimeRef.current = new Date().toISOString();
@@ -123,6 +133,7 @@ export function useTimer({ config, onComplete }: UseTimerOptions): UseTimerRetur
     resume,
     reset,
     skip,
+    startBreak,
   };
 }
 

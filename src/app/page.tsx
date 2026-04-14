@@ -144,7 +144,9 @@ export default function Home() {
     setPendingSessionData(null);
     setShowCompletionModal(false);
     setSelectedTaskId(null);
-  }, [pendingSessionData, selectedTaskId, selectedTask]);
+    // Auto-start break after modal closes
+    if (timerConfig.autoStartBreak) timer.startBreak();
+  }, [pendingSessionData, selectedTaskId, selectedTask, tags, timerConfig.autoStartBreak, timer]);
 
   const handleMemoSkip = useCallback(() => {
     if (pendingSessionData) {
@@ -161,7 +163,8 @@ export default function Home() {
     setPendingSessionData(null);
     setShowCompletionModal(false);
     setSelectedTaskId(null);
-  }, [pendingSessionData, selectedTaskId, selectedTask]);
+    if (timerConfig.autoStartBreak) timer.startBreak();
+  }, [pendingSessionData, selectedTaskId, selectedTask, timerConfig.autoStartBreak, timer]);
 
   const handleTabChange = useCallback((tab: TabId) => { setActiveTab(tab); saveActiveTab(tab); }, []);
   const handleTimerConfigChange = useCallback((c: TimerConfig) => { setTimerConfig(c); saveTimerConfig(c); }, []);
