@@ -38,12 +38,22 @@ function formatTime(seconds: number): string {
   return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
+function ResetIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12a9 9 0 1 1 9 9 9.75 9.75 0 0 1-6.74-2.74L3 21" />
+      <path d="M3 10V3h7" />
+    </svg>
+  );
+}
+
 const PRIORITY_COLORS: Record<string, string> = { high: "text-red-400", medium: "text-amber-400", low: "text-emerald-400" };
 
 export default function FocusTab({ timer, focusMinutes, onFocusMinutesChange, onEnterFullscreen, ambientEnabled, onAmbientToggle, dailyGoal, todaySeconds, ensoTasks, selectedTaskId, onSelectTask }: Props) {
   const { secondsLeft, totalSeconds, mode, state, start, pause, resume, reset, skip } = timer;
   const progress = totalSeconds > 0 ? (totalSeconds - secondsLeft) / totalSeconds : 0;
   const isFocus = mode === "focus";
+  const accentClass = isFocus ? "bg-emerald-500 hover:bg-emerald-600" : "bg-amber-500 hover:bg-amber-600";
 
   const size = 280;
   const strokeWidth = 6;
@@ -51,14 +61,13 @@ export default function FocusTab({ timer, focusMinutes, onFocusMinutesChange, on
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference * (1 - progress);
 
-  // Daily goal progress
   const goalTarget = dailyGoal.minutes * 60;
   const goalProgress = goalTarget > 0 ? Math.min(todaySeconds / goalTarget, 1) : 0;
   const goalAchieved = goalTarget > 0 && todaySeconds >= goalTarget;
 
   return (
     <div className="animate-tab-enter flex flex-col items-center">
-      {/* ENSO TASK 連携: タスク選択 */}
+      {/* ENSO TASK連携: タスク選択 */}
       {ensoTasks.length > 0 && state === "idle" && (
         <div className="w-full max-w-xs mb-5">
           <p className="text-xs text-muted mb-2">{t("focus.selectTask")}</p>
@@ -101,7 +110,7 @@ export default function FocusTab({ timer, focusMinutes, onFocusMinutesChange, on
       </div>
 
       {/* Timer ring */}
-      <div className="relative mb-8">
+      <div className="relative mb-6">
         <svg width={size} height={size} className="transform -rotate-90">
           <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="currentColor" strokeWidth={strokeWidth} className="text-subtle opacity-30" />
           <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round"
@@ -115,7 +124,7 @@ export default function FocusTab({ timer, focusMinutes, onFocusMinutesChange, on
         </div>
       </div>
 
-      {/* Quick duration selector (idle only) */}
+      {/* Quick duration selector (idle + focus mode only) */}
       {state === "idle" && isFocus && (
         <div className="flex items-center gap-2 mb-6">
           {FOCUS_QUICK_OPTIONS.map((m) => (
@@ -135,47 +144,44 @@ export default function FocusTab({ timer, focusMinutes, onFocusMinutesChange, on
       )}
 
       {/* Controls */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center justify-center gap-5">
         {state === "idle" ? (
           <button onClick={start}
-            className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors text-white ${
-              isFocus ? "bg-emerald-500 hover:bg-emerald-600" : "bg-amber-500 hover:bg-amber-600"
-            }`}>
+            className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors text-white ${accentClass}`}>
             <PlayIcon size={28} />
           </button>
         ) : (
           <>
-            <button onClick={reset} className="w-12 h-12 rounded-full bg-card border border-card flex items-center justify-center text-muted hover:text-red-400 transition-colors">
-              <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 12a9 9 0 119 9 9.75 9.75 0 01-6.74-2.74L3 21" /><path d="M3 10V3h7" />
-              </svg>
+            <button onClick={reset}
+              className="w-12 h-12 rounded-full bg-card border border-card flex items-center justify-center text-muted hover:text-red-400 transition-colors">
+              <ResetIcon size={18} />
             </button>
             <button onClick={state === "running" ? pause : resume}
-              className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors text-white ${
-                isFocus ? "bg-emerald-500 hover:bg-emerald-600" : "bg-amber-500 hover:bg-amber-600"
-              }`}>
+              className={`w-16 h-16 rounded-full flex items-center justify-center transition-colors text-white ${accentClass}`}>
               {state === "running" ? <PauseIcon size={28} /> : <PlayIcon size={28} />}
             </button>
-            <button onClick={skip} className="w-12 h-12 rounded-full bg-card border border-card flex items-center justify-center text-muted hover:text-white transition-colors">
-              <SkipIcon size={20} />
+            <button onClick={skip}
+              className="w-12 h-12 rounded-full bg-card border border-card flex items-center justify-center text-muted hover:text-white transition-colors">
+              <SkipIcon size={18} />
             </button>
           </>
         )}
       </div>
 
-      {/* Bottom controls */}
+      {/* Sub controls (ambient + fullscreen) */}
       {state !== "idle" && (
-        <div className="mt-6 flex items-center gap-3">
+        <div className="mt-5 flex items-center gap-2">
           <button onClick={onAmbientToggle}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-card text-sm transition-colors ${
-              ambientEnabled ? "text-emerald-500" : "text-muted hover:text-white"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-card text-xs transition-colors ${
+              ambientEnabled ? "text-emerald-500 border-emerald-500/20" : "text-muted hover:text-white"
             }`}>
-            {ambientEnabled ? <SpeakerOnIcon size={16} /> : <SpeakerOffIcon size={16} />}
+            {ambientEnabled ? <SpeakerOnIcon size={14} /> : <SpeakerOffIcon size={14} />}
             {t("settings.ambient")}
           </button>
           <button onClick={onEnterFullscreen}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-card text-sm text-muted hover:text-white transition-colors">
-            <ExpandIcon size={16} />{t("focus.fullscreen")}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-card text-xs text-muted hover:text-white transition-colors">
+            <ExpandIcon size={14} />
+            {t("focus.fullscreen")}
           </button>
         </div>
       )}
